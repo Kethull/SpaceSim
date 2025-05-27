@@ -470,14 +470,29 @@ func stop_mining() -> void:
 func _process_mining(delta: float) -> void:
 	if not is_mining_active or not current_target_resource_node or not is_instance_valid(current_target_resource_node): if is_mining_active: stop_mining(); return
 	var cfg = _config_manager_instance.get_config(); if not cfg: return
-	var mining_dist = cfg.get("harvest_distance", 50.0)
-	if global_position.distance_squared_to(current_target_resource_node.global_position) > mining_dist * mining_dist: stop_mining(); return
+	var harvest_distance_value = 50.0 # Default value
+	if cfg and "harvest_distance" in cfg:
+		harvest_distance_value = cfg.harvest_distance
+	
+	# This check is added for robustness, as current_target_resource_node can apparently be null here.
+	if not current_target_resource_node or not is_instance_valid(current_target_resource_node):
+		printerr("Probe._process_mining: current_target_resource_node became null or invalid before distance check (line 477). Stopping mining.")
+		stop_mining()  # Assuming stop_mining() is a function that handles this.
+		return         # Exit the function to prevent the crash.
+	if global_position.distance_squared_to(current_target_resource_node.global_position) > harvest_distance_value * harvest_distance_value: stop_mining(); return
 	if mining_laser and mining_laser.visible: mining_laser.set_point_position(1, to_local(current_target_resource_node.global_position))
-	var energy_cost_mining = cfg.get("mining_energy_cost_per_second", 1.0)
-	if current_energy < energy_cost_mining * delta: stop_mining(); return
-	current_energy -= energy_cost_mining * delta
+	
+	var mining_energy_cost_value = 1.0 # Default value
+	if cfg and "mining_energy_cost_per_second" in cfg:
+		mining_energy_cost_value = cfg.mining_energy_cost_per_second
+		
+	if current_energy < mining_energy_cost_value * delta: stop_mining(); return
+	current_energy -= mining_energy_cost_value * delta
 	if current_target_resource_node.has_method("harvest"):
-		var harvested = current_target_resource_node.harvest(cfg.get("harvest_rate", 10.0) * delta)
+		var harvest_rate_value = 10.0 # Default value
+		if cfg and "harvest_rate" in cfg:
+			harvest_rate_value = cfg.harvest_rate
+		var harvested = current_target_resource_node.harvest(harvest_rate_value * delta)
 		if harvested > 0: stored_resources += harvested
 		if current_target_resource_node.has_method("get_current_amount") and current_target_resource_node.get_current_amount() <= 0: stop_mining()
 	else: stop_mining()

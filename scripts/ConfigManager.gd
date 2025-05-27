@@ -43,39 +43,15 @@ func get_config() -> GameConfiguration:
 	return load("res://scripts/GameConfiguration.gd").new()
 
 func get_setting(category: String, setting_name: String, default_value = null):
-	"""
-	Helper method to get a setting from the config with a default value.
-	For backwards compatibility with the get_setting pattern used throughout the codebase.
-	
-	Args:
-		category: Category name (can be ignored since GameConfiguration is flat)
-		setting_name: The property name to get
-		default_value: Default value if property doesn't exist or config is unavailable
-	
-	Returns:
-		The setting value or default_value
-	"""
-	# Category is ignored as GameConfiguration properties are accessed directly.
-	var config_resource = get_config() # get_config() should return a GameConfiguration instance
+	var config_resource = get_config() # Assuming this returns GameConfiguration instance or null
 	if config_resource:
-		# Check if the property exists on the GameConfiguration resource
-		# For exported vars, they should always exist if the resource is loaded correctly.
-		# Using 'in' operator is generally for Dictionaries or checking if a property is script-defined.
-		# For Resource types, direct access is preferred if the property is known.
-		# has_meta() is for checking metadata, not script variables directly.
-		# The most straightforward way for an @export var is to assume it exists if config_resource is valid.
-		# However, to be robust against a malformed or incomplete GameConfiguration resource,
-		# we can attempt to get it and catch potential issues, or rely on default values.
-		# Given GameConfiguration.gd has @export vars, they are direct properties.
-		if setting_name in config_resource: # This works for script members
-			return config_resource[setting_name]
+		if setting_name in config_resource: # Checks if property exists on the GDScript resource
+			return config_resource[setting_name] # Access the property value
 		else:
-			# This case implies the setting_name is not a defined @export var in GameConfiguration
-			# or it's a property that doesn't exist for some other reason.
-			push_warning("ConfigManager: Property '%s' not found in GameConfiguration. Returning default value." % setting_name)
+			printerr("ConfigManager: Setting '%s' not found in GameConfiguration under category '%s'." % [setting_name, category])
 			return default_value
 	else:
-		push_warning("ConfigManager: get_setting called but no valid config available. Returning default value for '%s'." % setting_name)
+		printerr("ConfigManager: GameConfiguration resource not available when trying to get setting '%s'." % setting_name)
 		return default_value
 
 func validate_configuration() -> bool:
