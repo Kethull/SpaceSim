@@ -377,27 +377,13 @@ func create_initial_probes():
 		return
 	
 	var current_config = config_manager_node.get_config()
-	# GameConfiguration has 'initial_probes' as a direct property.
-	# We check if current_config itself is null, then access the property.
-	if not current_config: # Check if config object was retrieved
-		printerr("Failed to retrieve config object from ConfigManager. Defaulting to 1 probe for initial_probes.")
-		current_config = {"initial_probes": 1} # Fallback to a dictionary if GameConfiguration is missing
-	elif not current_config.has_meta("initial_probes") and not "initial_probes" in current_config: # Check if property exists, GameConfiguration is a Resource
-		# This check is more for safety; 'initial_probes' is an @export var in GameConfiguration.
-		# If GameConfiguration is loaded correctly, 'initial_probes' should exist.
-		# If current_config became a Dictionary due to earlier fallback, this 'in' check is valid.
-		printerr("'initial_probes' property not found in the loaded GameConfiguration. Defaulting to 1 probe.")
-		# To ensure num_probes_to_create can still be fetched if current_config is a GameConfiguration without the property (unlikely for @export)
-		# or if it's our fallback dictionary.
-		if not ("initial_probes" in current_config): # If it's a GameConfiguration that somehow lost the prop
-			current_config = {"initial_probes": 1} # Re-ensure fallback if it was a GameConfig missing the prop
-	# If current_config is a valid GameConfiguration, current_config.initial_probes will be used by .get()
-	# If current_config is the fallback dictionary, .get() will also work.
+	var num_probes_to_create = 1 # Default value
 
-		printerr("initial_probes not found in ConfigManager.config. Defaulting to 1 probe.")
-		current_config = {"initial_probes": 1} # Fallback
-
-	var num_probes_to_create = current_config.get("initial_probes", 1)
+	if current_config:
+		# 'initial_probes' is an @export var in GameConfiguration, access directly.
+		num_probes_to_create = current_config.initial_probes
+	else:
+		printerr("Failed to retrieve config object from ConfigManager. Defaulting to %d initial_probes." % num_probes_to_create)
 	print("Attempting to create %d initial probes." % num_probes_to_create)
 
 	for i in range(num_probes_to_create):

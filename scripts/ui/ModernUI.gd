@@ -1,7 +1,7 @@
 extends Control
 class_name ModernUI
 
-@onready var hud: Control = $HUD
+@onready var hud: Control = self # The script is on the HUD node, so 'self' is the HUD.
 @onready var probe_list_panel: Panel = $ProbeListPanel
 @onready var selected_probe_panel: Panel = $SelectedProbePanel
 @onready var system_stats_panel: Panel = $SystemStatsPanel
