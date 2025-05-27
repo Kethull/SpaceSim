@@ -1,0 +1,97 @@
+[gd_scene load_steps=4 format=3 uid="uid://b8w7xqvf8qg7x"]
+
+[ext_resource type="Script" path="res://scripts/Probe.gd" id="1_abcde"] ; Placeholder ID, will be updated by Godot
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_12345"] ; Placeholder ID
+radius = 12.0 ; Default, will be scaled by script
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_67890"] ; Placeholder ID for sensor/comm
+radius = 100.0 ; Default, will be configured by script
+
+[node name="Probe" type="RigidBody2D"]
+script = ExtResource("1_abcde")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_12345")
+
+[node name="VisualComponent" type="Node2D" parent="."]
+
+[node name="HullSprite" type="Sprite2D" parent="VisualComponent"]
+;; For placeholder, use Godot icon or a simple shape.
+;; In a real project, you'd use: texture = ExtResource("res://path/to/your/probe_texture.png")
+
+[node name="SolarPanels" type="Node2D" parent="VisualComponent"]
+
+[node name="LeftPanel" type="Sprite2D" parent="VisualComponent/SolarPanels"]
+;; Placeholder
+
+[node name="RightPanel" type="Sprite2D" parent="VisualComponent/SolarPanels"]
+;; Placeholder
+
+[node name="CommunicationDish" type="Sprite2D" parent="VisualComponent"]
+;; Placeholder
+
+[node name="SensorArray" type="Sprite2D" parent="VisualComponent"] ; Note: This is the visual representation, different from the Area2D
+;; Placeholder
+
+[node name="StatusLights" type="Node2D" parent="VisualComponent"]
+
+[node name="StatusLight1" type="Sprite2D" parent="VisualComponent/StatusLights"]
+;; Placeholder
+
+[node name="StatusLight2" type="Sprite2D" parent="VisualComponent/StatusLights"]
+;; Placeholder
+
+[node name="StatusLight3" type="Sprite2D" parent="VisualComponent/StatusLights"]
+;; Placeholder
+
+[node name="ThrusterSystem" type="Node2D" parent="."]
+
+[node name="MainThruster" type="GPUParticles2D" parent="ThrusterSystem"]
+;; Default GPUParticles2D, script will configure
+
+[node name="RCSThrusterN" type="GPUParticles2D" parent="ThrusterSystem"]
+;; Default
+
+[node name="RCSThrusterS" type="GPUParticles2D" parent="ThrusterSystem"]
+;; Default
+
+[node name="RCSThrusterE" type="GPUParticles2D" parent="ThrusterSystem"]
+;; Default
+
+[node name="RCSThrusterW" type="GPUParticles2D" parent="ThrusterSystem"]
+;; Default
+
+[node name="MiningParticles" type="GPUParticles2D" parent="ThrusterSystem"]
+;; Default
+
+[node name="SensorArray" type="Area2D" parent="."] ; Note: This is the Area2D for detection
+collision_layer = 0
+collision_mask = 8 ; Assuming resources are on layer 4 (value 8) - adjust if needed
+
+[node name="SensorShape" type="CollisionShape2D" parent="SensorArray"]
+shape = SubResource("CircleShape2D_67890")
+
+[node name="CommunicationRange" type="Area2D" parent="."]
+collision_layer = 0
+collision_mask = 4 ; Assuming other probes are on layer 3 (value 4) - adjust if needed
+
+[node name="CommShape" type="CollisionShape2D" parent="CommunicationRange"]
+shape = SubResource("CircleShape2D_67890") ; Can use a different subresource if sizes differ significantly by default
+
+[node name="MovementTrail" type="Line2D" parent="."]
+width = 2.0
+default_color = Color(0, 1, 1, 0.5) ; Cyan, semi-transparent
+
+[node name="MiningLaser" type="Line2D" parent="."]
+width = 3.0
+default_color = Color(1, 0, 0, 1) ; Red
+visible = false
+
+[node name="AIAgent" type="Node" parent="."]
+;; Empty node for now. Script AIAgent.gd will be attached later if it exists.
+
+[node name="EnergySystem" type="Node" parent="."]
+;; Empty node for now.
+
+[node name="AudioComponent" type="AudioStreamPlayer2D" parent="."]

@@ -1,0 +1,34 @@
+[gd_scene load_steps=3 format=3 uid="uid://d0a7b8c6d5fax"]
+
+[ext_resource type="Script" path="res://effects/DiscoveryEffect.gd" id="1_fghij"]
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_67890"]
+particle_flag_disable_z = true
+emission_shape = 1 # EMISSION_SHAPE_SPHERE or EMISSION_SHAPE_RING for a pulse
+emission_sphere_radius = 10.0 # Or emission_ring_radius if using ring
+direction = Vector3(0, 1, 0) # Default, often overridden by spread or initial velocity
+spread = 180.0 # Emit in all directions for a burst
+initial_velocity_min = 75.0
+initial_velocity_max = 125.0
+gravity = Vector3(0, 0, 0)
+radial_accel_min = -50.0 # Particles can expand then optionally contract or just fade
+radial_accel_max = -25.0
+scale_min = 0.8
+scale_max = 2.0
+color = Color(0.5, 0.8, 1, 1) # Light blue / cyan for discovery
+hue_variation_min = -0.1
+hue_variation_max = 0.1
+
+[node name="DiscoveryEffect" type="Node2D"]
+script = ExtResource("1_fghij")
+
+[node name="GPUParticles2D" type="GPUParticles2D" parent="."]
+amount = 80
+process_material = SubResource("ParticleProcessMaterial_67890")
+texture = null # User should assign a texture (e.g. a soft glow or star shape)
+lifetime = 0.8
+one_shot = true
+explosiveness = 0.9
+fixed_fps = 0
+interpolate = false
+visibility_rect = Rect2(-150, -150, 300, 300) # Adjust as needed

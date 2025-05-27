@@ -1,0 +1,103 @@
+[gd_scene load_steps=11 format=3 uid="uid://c6v0xjpw0x0qj"]
+
+[ext_resource type="Script" uid="uid://ce1wjtxcjio8d" path="res://scripts/SimulationManager.gd" id="1_xxxxx"]
+[ext_resource type="Script" uid="uid://c4khadtg5v4bf" path="res://scripts/SolarSystem.gd" id="2_xxxxx"]
+[ext_resource type="Script" uid="uid://cngot1h6gesxl" path="res://scripts/ProbeManager.gd" id="3_xxxxx"]
+[ext_resource type="Script" uid="uid://dbf6exig57jg6" path="res://scripts/ResourceManager.gd" id="4_xxxxx"]
+[ext_resource type="Script" uid="uid://cb0e1j4mvhkmn" path="res://scripts/ParticleManager.gd" id="5_xxxxx"]
+[ext_resource type="Script" uid="uid://0oav3ggigv0t" path="res://scripts/BackgroundManager.gd" id="7_xxxxx"]
+[ext_resource type="Script" uid="uid://dlayfi4qn2ve6" path="res://scripts/Main.gd" id="8_main_gd"]
+[ext_resource type="Script" uid="uid://w2vhthr0bhbu" path="res://scripts/CameraController.gd" id="9_cam_ctrl"]
+[ext_resource type="Script" uid="uid://bmi62a8ekr57y" path="res://scripts/ui/ModernUI.gd" id="10_modern_ui"]
+
+[sub_resource type="Environment" id="Environment_1"]
+background_mode = 1
+background_color = Color(0.0901961, 0.0901961, 0.109804, 1)
+tonemap_mode = 2
+glow_enabled = true
+glow_bloom = 0.05
+adjustment_contrast = 1.1
+adjustment_saturation = 1.1
+
+[node name="Main" type="Node2D"]
+script = ExtResource("8_main_gd")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_1")
+
+[node name="SimulationManager" type="Node" parent="."]
+script = ExtResource("1_xxxxx")
+
+[node name="SolarSystem" type="Node2D" parent="."]
+script = ExtResource("2_xxxxx")
+
+[node name="Planets" type="Node2D" parent="SolarSystem"]
+
+[node name="AsteroidBelt" type="Node2D" parent="SolarSystem"]
+
+[node name="ProbeManager" type="Node2D" parent="."]
+script = ExtResource("3_xxxxx")
+
+[node name="ResourceManager" type="Node2D" parent="."]
+script = ExtResource("4_xxxxx")
+
+[node name="ParticleManager" type="Node2D" parent="."]
+script = ExtResource("5_xxxxx")
+
+[node name="MainCamera" type="Camera2D" parent="."]
+zoom = Vector2(0.5, 0.5)
+limit_smoothed = true
+position_smoothing_enabled = true
+rotation_smoothing_enabled = true
+
+[node name="CameraController" type="Node2D" parent="MainCamera"]
+script = ExtResource("9_cam_ctrl")
+
+[node name="UI" type="CanvasLayer" parent="."]
+
+[node name="HUD" type="Control" parent="UI"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("10_modern_ui")
+
+[node name="ProbeListPanel" type="Panel" parent="UI"]
+offset_right = 200.0
+offset_bottom = 300.0
+
+[node name="SelectedProbePanel" type="Panel" parent="UI"]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -250.0
+offset_bottom = 200.0
+grow_horizontal = 0
+
+[node name="SystemStatsPanel" type="Panel" parent="UI"]
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_top = -150.0
+offset_right = 300.0
+grow_vertical = 0
+
+[node name="DebugPanel" type="Panel" parent="UI"]
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -300.0
+offset_top = -200.0
+grow_horizontal = 0
+grow_vertical = 0
+
+[node name="Background" type="ParallaxBackground" parent="."]
+script = ExtResource("7_xxxxx")
+
+[node name="StarFieldFar" type="ParallaxLayer" parent="Background"]
+motion_scale = Vector2(0.1, 0.1)
+motion_mirroring = Vector2(1400, 900)

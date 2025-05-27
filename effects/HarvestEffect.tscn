@@ -1,0 +1,28 @@
+[gd_scene load_steps=3 format=3 uid="uid://c1x0gq8w7f8yv"]
+
+[ext_resource type="Script" path="res://effects/HarvestEffect.gd" id="1_abcde"]
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_12345"]
+particle_flag_disable_z = true
+emission_shape = 1
+emission_sphere_radius = 5.0
+initial_velocity_min = 50.0
+initial_velocity_max = 100.0
+gravity = Vector3(0, 0, 0)
+scale_min = 0.5
+scale_max = 1.5
+color = Color(1, 0.843137, 0, 1) # Yellowish/Orange for harvest
+
+[node name="HarvestEffect" type="Node2D"]
+script = ExtResource("1_abcde")
+
+[node name="GPUParticles2D" type="GPUParticles2D" parent="."]
+amount = 50
+process_material = SubResource("ParticleProcessMaterial_12345")
+texture = null # User should assign a texture (e.g. a small dot or spark)
+lifetime = 1.0
+one_shot = true
+explosiveness = 0.8
+fixed_fps = 0
+interpolate = false
+visibility_rect = Rect2(-100, -100, 200, 200) # Adjust as needed

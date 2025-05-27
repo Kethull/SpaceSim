@@ -1,0 +1,39 @@
+[gd_scene load_steps=5 format=3 uid="uid://dpsj0h5gqj0f2"]
+
+[ext_resource type="Script" path="res://scripts/CelestialBody.gd" id="1_abcde"] ; Placeholder, will be updated by Godot
+[ext_resource type="Texture2D" uid="uid://b35ktdru8hgtf" path="res://icon.svg" id="2_xyz12"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_1"]
+radius = 10.0 ; Will be set by script
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_2"]
+radius = 20.0 ; Example, larger than body
+
+[node name="CelestialBody" type="RigidBody2D"]
+script = ExtResource("1_abcde")
+
+[node name="BodyCollisionShape" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_1")
+
+[node name="VisualComponent" type="Node2D" parent="."]
+
+[node name="BodySprite" type="Sprite2D" parent="VisualComponent"]
+texture = ExtResource("2_xyz12")
+
+[node name="AtmosphereGlow" type="Sprite2D" parent="VisualComponent"]
+texture = ExtResource("2_xyz12")
+
+[node name="StatusLights" type="Node2D" parent="VisualComponent"]
+
+[node name="OrbitTrail" type="Line2D" parent="."]
+width = 2.0
+default_color = Color(0.501961, 0.501961, 0.501961, 0.501961)
+
+[node name="GravityField" type="Area2D" parent="."]
+collision_layer = 0
+collision_mask = 0 ; Will be configured in script if needed
+
+[node name="GravityShape" type="CollisionShape2D" parent="GravityField"]
+shape = SubResource("CircleShape2D_2")
+
+[node name="AudioComponent" type="AudioStreamPlayer2D" parent="."]

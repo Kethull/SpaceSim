@@ -1,0 +1,13 @@
+[gd_scene load_steps=2 format=3 uid="uid://c3s5g6v7h8ka"]
+
+[ext_resource type="Script" path="res://effects/CommunicationEffect.gd" id="1_comm_effect"]
+
+[node name="CommunicationBeam" type="Line2D"]
+script = ExtResource("1_comm_effect")
+points = PackedVector2Array(0, 0, 50, 0) # Default points, will be overridden by script
+width = 3.0
+default_color = Color(0.6, 0.8, 1, 0.8) # Light blue, slightly transparent
+joint_mode = 2 # JointMode.ROUND
+begin_cap_mode = 2 # CapMode.ROUND
+end_cap_mode = 2 # CapMode.ROUND
+antialiased = true
