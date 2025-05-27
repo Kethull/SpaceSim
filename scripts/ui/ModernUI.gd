@@ -2,10 +2,10 @@ extends Control
 class_name ModernUI
 
 @onready var hud: Control = self # The script is on the HUD node, so 'self' is the HUD.
-@onready var probe_list_panel: Panel = $ProbeListPanel
-@onready var selected_probe_panel: Panel = $SelectedProbePanel
-@onready var system_stats_panel: Panel = $SystemStatsPanel
-@onready var debug_panel: Panel = $DebugPanel
+@onready var probe_list_panel: Panel = $"HUD#ProbeListPanel"
+@onready var selected_probe_panel: Panel = $"HUD#SelectedProbePanel"
+@onready var system_stats_panel: Panel = $"HUD#SystemStatsPanel"
+@onready var debug_panel: Panel = $"HUD#DebugPanel"
 
 var selected_probe_id: int = -1
 var probe_data_cache: Dictionary = {}
@@ -19,6 +19,21 @@ signal simulation_speed_changed(new_speed: float)
 signal ui_action_requested(action_type: String, data: Dictionary)
 
 func _ready():
+	# Check if essential UI panels were found after @onready initialization
+	if probe_list_panel == null:
+		push_error("ModernUI Error: ProbeListPanel node not found. Expected path: 'HUD#ProbeListPanel'. Probe list UI will not be functional.")
+	if selected_probe_panel == null:
+		push_error("ModernUI Error: SelectedProbePanel node not found. Expected path: 'HUD#SelectedProbePanel'. Selected probe UI will not be functional.")
+	if system_stats_panel == null:
+		push_error("ModernUI Error: SystemStatsPanel node not found. Expected path: 'HUD#SystemStatsPanel'. System stats UI will not be functional.")
+	
+	# Handle debug_panel separately as its necessity depends on ConfigManager.config.debug_mode
+	if debug_panel == null:
+		if ConfigManager.config.debug_mode:
+			push_error("ModernUI Error: DebugPanel node not found while debug_mode is enabled. Expected path: 'HUD#DebugPanel'. Debug UI will not be functional.")
+		# else: # If debug_mode is false, missing debug_panel might be acceptable or logged differently.
+			# print_debug("ModernUI Info: DebugPanel node not found, but debug_mode is disabled.")
+
 	setup_ui_panels()
 	setup_animations()
 	setup_input_handlers()
@@ -37,6 +52,9 @@ func setup_ui_panels():
 	setup_debug_panel()
 
 func setup_probe_list_panel():
+	if probe_list_panel == null:
+		return # Error logged in _ready
+
 	var scroll_container = ScrollContainer.new()
 	var vbox = VBoxContainer.new()
 	
@@ -62,6 +80,9 @@ func setup_probe_list_panel():
 	probe_list_panel.add_theme_stylebox_override("panel", style_box)
 
 func setup_selected_probe_panel():
+	if selected_probe_panel == null:
+		return # Error logged in _ready
+
 	var vbox = VBoxContainer.new()
 	vbox.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	vbox.add_theme_constant_override("separation", 10)
@@ -181,6 +202,9 @@ func create_probe_controls() -> VBoxContainer:
 	return controls
 
 func setup_system_stats_panel():
+	if system_stats_panel == null:
+		return # Error logged in _ready
+
 	var vbox = VBoxContainer.new()
 	vbox.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	vbox.add_theme_constant_override("separation", 8)
@@ -200,8 +224,13 @@ func setup_system_stats_panel():
 	system_stats_panel.add_child(vbox)
 
 func setup_debug_panel():
+	if debug_panel == null:
+		# If debug_panel is null, we can't set its visibility or add children.
+		# Error/warning for missing node (if debug_mode is true) is handled in _ready.
+		return
+
 	if not ConfigManager.config.debug_mode:
-		debug_panel.visible = false
+		debug_panel.visible = false # This is safe now because debug_panel is confirmed not null
 		return
 	
 	var vbox = VBoxContainer.new()
@@ -280,6 +309,11 @@ func create_performance_display() -> VBoxContainer:
 	return perf_display
 
 func setup_animations():
+	# Check if any of the essential panels for animation are available
+	if probe_list_panel == null and selected_probe_panel == null and system_stats_panel == null:
+		push_warning("ModernUI Warning: All animation target panels (ProbeList, SelectedProbe, SystemStats) are null. Skipping panel glow animations.")
+		return # Don't proceed if no panels to animate
+
 	animation_tween = create_tween()
 	animation_tween.set_loops()
 	
@@ -289,23 +323,41 @@ func setup_animations():
 func animate_panel_glow():
 	# Add subtle glow animation to active panels
 	var panels = [probe_list_panel, selected_probe_panel, system_stats_panel]
+	var panel_names = ["ProbeListPanel", "SelectedProbePanel", "SystemStatsPanel"] # For better error messages
 	
-	for panel in panels:
+	if animation_tween == null: # Ensure tween is initialized
+		push_warning("ModernUI Warning: animation_tween is null in animate_panel_glow. Animations might not have been set up correctly.")
+		return
+
+	for i in range(panels.size()):
+		var panel = panels[i]
+		if panel == null:
+			push_warning("ModernUI Warning: Panel '%s' is null. Skipping animation for this panel." % panel_names[i])
+			continue
+
 		var style_box = panel.get_theme_stylebox("panel")
 		if style_box is StyleBoxFlat:
 			var original_color = style_box.border_color
-			animation_tween.parallel().tween_method(
-				func(color): style_box.border_color = color,
-				original_color,
-				original_color * 1.3,
-				2.0
-			)
-			animation_tween.parallel().tween_method(
-				func(color): style_box.border_color = color,
-				original_color * 1.3,
-				original_color,
-				2.0
-			)
+			# Ensure the tween is valid before adding to it
+			if animation_tween.is_valid():
+				animation_tween.parallel().tween_method(
+					func(color):
+						if is_instance_valid(panel) and is_instance_valid(style_box): style_box.border_color = color,
+					original_color,
+					original_color * 1.3,
+					2.0
+				).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+				animation_tween.parallel().tween_method(
+					func(color):
+						if is_instance_valid(panel) and is_instance_valid(style_box): style_box.border_color = color,
+					original_color * 1.3,
+					original_color,
+					2.0
+				).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT).set_delay(2.0)
+			else:
+				push_warning("ModernUI Warning: animation_tween became invalid during animate_panel_glow for panel '%s'." % panel_names[i])
+		elif panel != null: # Only warn if panel exists but stylebox is not StyleBoxFlat
+			push_warning("ModernUI Warning: Panel '%s' does not have a StyleBoxFlat for 'panel' theme. Cannot animate glow." % panel_names[i])
 
 func setup_input_handlers():
 	# Setup keyboard shortcuts
