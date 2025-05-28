@@ -5,7 +5,7 @@ extends RigidBody2D
 const MessageData = preload("res://scripts/data/MessageData.gd")
 const CommunicationBeamScene = preload("res://effects/CommunicationBeam.tscn")
 
-@onready var _config_manager_instance = get_node("/root/ConfigManager")
+@onready var _config_manager_instance = get_node_or_null("/root/ConfigManager")
 
 # Signals
 signal resource_discovered(probe: ProbeUnit, resource_data: Dictionary) # Changed to pass Dictionary
@@ -88,6 +88,8 @@ var _base_hull_color: Color = Color.WHITE
 var is_alive: bool = true
 
 func _ready() -> void:
+	if not _config_manager_instance:
+		printerr("ConfigManager (Autoload) at path '/root/ConfigManager' not found in Probe.gd _ready(). Critical features may fail.")
 	var cfg_initial = _config_manager_instance.get_config() if _config_manager_instance else null
 	
 	if cfg_initial:
@@ -444,6 +446,25 @@ func set_target_resource_by_observed_index(observed_idx: int) -> void:
 		if is_mining_active: stop_mining()
 		# print_debug("Probe %s: Failed to set target from observed_idx %d, candidate invalid." % [probe_id, observed_idx])
 
+# Helper method to safely clear target
+func clear_target_resource():
+	if is_mining_active:
+		stop_mining()
+	current_target_resource_node = null
+	target_resource_idx_ai = -1
+
+# Helper method to safely set target with validation
+func set_target_resource_node(resource_node: Node) -> bool:
+	if not resource_node or not is_instance_valid(resource_node):
+		clear_target_resource()
+		return false
+		
+	if not resource_node.is_in_group("resources"):
+		clear_target_resource()
+		return false
+		
+	current_target_resource_node = resource_node
+	return true
 # --- Mining Logic ---
 func start_mining() -> void:
 	if not current_target_resource_node or not is_instance_valid(current_target_resource_node): if is_mining_active: stop_mining(); return
@@ -468,35 +489,82 @@ func stop_mining() -> void:
 	if mining_laser: mining_laser.visible = false
 
 func _process_mining(delta: float) -> void:
-	if not is_mining_active or not current_target_resource_node or not is_instance_valid(current_target_resource_node): if is_mining_active: stop_mining(); return
-	var cfg = _config_manager_instance.get_config(); if not cfg: return
-	var harvest_distance_value = 50.0 # Default value
-	if cfg and "harvest_distance" in cfg:
-		harvest_distance_value = cfg.harvest_distance
-	
-	# This check is added for robustness, as current_target_resource_node can apparently be null here.
-	if not current_target_resource_node or not is_instance_valid(current_target_resource_node):
-		printerr("Probe._process_mining: current_target_resource_node became null or invalid before distance check (line 477). Stopping mining.")
-		stop_mining()  # Assuming stop_mining() is a function that handles this.
-		return         # Exit the function to prevent the crash.
-	if global_position.distance_squared_to(current_target_resource_node.global_position) > harvest_distance_value * harvest_distance_value: stop_mining(); return
-	if mining_laser and mining_laser.visible: mining_laser.set_point_position(1, to_local(current_target_resource_node.global_position))
-	
-	var mining_energy_cost_value = 1.0 # Default value
-	if cfg and "mining_energy_cost_per_second" in cfg:
-		mining_energy_cost_value = cfg.mining_energy_cost_per_second
+	if not is_mining_active:
+		return
 		
-	if current_energy < mining_energy_cost_value * delta: stop_mining(); return
-	current_energy -= mining_energy_cost_value * delta
-	if current_target_resource_node.has_method("harvest"):
-		var harvest_rate_value = 10.0 # Default value
-		if cfg and "harvest_rate" in cfg:
-			harvest_rate_value = cfg.harvest_rate
-		var harvested = current_target_resource_node.harvest(harvest_rate_value * delta)
-		if harvested > 0: stored_resources += harvested
-		if current_target_resource_node.has_method("get_current_amount") and current_target_resource_node.get_current_amount() <= 0: stop_mining()
-	else: stop_mining()
+	# Critical: Check target validity at the beginning AND before each access
+	if not current_target_resource_node or not is_instance_valid(current_target_resource_node):
+		print("Probe._process_mining: current_target_resource_node became null or invalid. Stopping mining.")
+		stop_mining()
+		return
+		
+	var cfg = _config_manager_instance.get_config()
+	if not cfg:
+		# According to prompt's fixed code, just return. If mining was active, it remains so.
+		# Subsequent logic needing cfg won't run. If cfg becomes available, it might proceed next frame.
+		return
+		
+	var harvest_distance_value = cfg.get("harvest_distance", 50.0)
+	
+	# Double-check validity before accessing global_position
+	if not current_target_resource_node or not is_instance_valid(current_target_resource_node):
+		print("Probe._process_mining: current_target_resource_node became invalid before distance check. Stopping mining.")
+		stop_mining()
+		return
+		
+	var distance_sq = global_position.distance_squared_to(current_target_resource_node.global_position)
+	if distance_sq > harvest_distance_value * harvest_distance_value:
+		stop_mining()
+		return
+		
+	# Continue with rest of mining logic, always checking validity before access
+	if mining_laser and mining_laser.visible:
+		# Check again before accessing position for laser
+		if current_target_resource_node and is_instance_valid(current_target_resource_node):
+			mining_laser.set_point_position(1, to_local(current_target_resource_node.global_position))
+		# If target became invalid here, the laser won't update, but subsequent checks for harvesting will catch it.
 
+	# --- Integrated rest of original function's logic (lines 485-498 of original) with safety checks ---
+	
+	# Mining energy cost (cfg is confirmed valid at this point)
+	var mining_energy_cost_value = cfg.get("mining_energy_cost_per_second", 1.0)
+		
+	if current_energy < mining_energy_cost_value * delta:
+		stop_mining()
+		return
+	current_energy -= mining_energy_cost_value * delta
+	
+	# Actual harvesting from resource
+	# CRITICAL: Re-check target validity before any operations on current_target_resource_node for harvesting.
+	if not current_target_resource_node or not is_instance_valid(current_target_resource_node):
+		print("Probe._process_mining: current_target_resource_node became invalid before harvest operations. Stopping mining.")
+		stop_mining()
+		return
+
+	if current_target_resource_node.has_method("harvest"):
+		var harvest_rate_value = cfg.get("harvest_rate", 10.0)
+		var harvested_amount = current_target_resource_node.harvest(harvest_rate_value * delta) # This might invalidate the node
+		
+		if harvested_amount > 0:
+			stored_resources += harvested_amount
+		
+		# Check if resource depleted after harvesting
+		# CRITICAL: Re-check validity of current_target_resource_node as harvest() might have freed it or changed its state.
+		if not current_target_resource_node or not is_instance_valid(current_target_resource_node):
+			print("Probe._process_mining: current_target_resource_node became invalid during/after harvest, before depletion check. Stopping mining.")
+			stop_mining()
+			return
+
+		# This check is only performed if the node is still valid.
+		if current_target_resource_node.has_method("get_current_amount") and \
+		   current_target_resource_node.get_current_amount() <= 0.001: # Use epsilon for float comparison
+			stop_mining()
+			return
+	else:
+		# This case means current_target_resource_node is valid but lacks "harvest" method.
+		print("Probe._process_mining: Target resource node (%s) is valid but does not have 'harvest' method. Stopping mining." % str(current_target_resource_node))
+		stop_mining()
+		return
 func _update_cooldowns(delta: float):
 	if communication_cooldown_remaining > 0: communication_cooldown_remaining = max(0.0, communication_cooldown_remaining - delta)
 	if replication_cooldown_remaining > 0: replication_cooldown_remaining = max(0.0, replication_cooldown_remaining - delta)
@@ -557,6 +625,9 @@ func _handle_sensor_interaction(node: Node2D, entered: bool) -> void:
 				resource_discovered.emit(self, {"id":res_node.name, "position":res_node.global_position, "type":r_data.get("type","unknown"), "amount":r_data.get("amount",0.0)})
 		else: # Exited
 			for i in range(nearby_observed_resources_cache.size()-1, -1, -1): if nearby_observed_resources_cache[i]==res_node: nearby_observed_resources_cache.remove_at(i); break
+			# CRITICAL: Clear target if it was the exiting resource
+			if current_target_resource_node == res_node:
+				clear_target_resource()
 	# elif node.is_in_group("celestial_bodies"): pass
 	# elif node.is_in_group("probes") and node != self: pass
 

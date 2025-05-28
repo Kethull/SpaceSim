@@ -29,7 +29,7 @@ func _ready():
 	
 	# Handle debug_panel separately as its necessity depends on ConfigManager.config.debug_mode
 	if debug_panel == null:
-		if ConfigManager.config.debug_mode:
+		if ConfigManager.get_setting("general", "debug_mode", false):
 			push_error("ModernUI Error: DebugPanel node not found while debug_mode is enabled. Expected path: 'HUD#DebugPanel'. Debug UI will not be functional.")
 		# else: # If debug_mode is false, missing debug_panel might be acceptable or logged differently.
 			# print_debug("ModernUI Info: DebugPanel node not found, but debug_mode is disabled.")
@@ -229,7 +229,7 @@ func setup_debug_panel():
 		# Error/warning for missing node (if debug_mode is true) is handled in _ready.
 		return
 
-	if not ConfigManager.config.debug_mode:
+	if not ConfigManager.get_setting("general", "debug_mode", false):
 		debug_panel.visible = false # This is safe now because debug_panel is confirmed not null
 		return
 	

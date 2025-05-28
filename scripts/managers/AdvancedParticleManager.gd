@@ -33,7 +33,7 @@ func _ready():
 	
 	# Set initial quality based on config if available
 	if config_manager and config_manager.config:
-		var initial_quality_str = config_manager.config.get("adaptive_quality_initial_level", "MEDIUM")
+		var initial_quality_str = config_manager.get_setting("general", "adaptive_quality_initial_level", "MEDIUM")
 		match initial_quality_str.to_upper():
 			"LOW": current_particle_quality_level = AdaptiveQualityManager.Quality.LOW
 			"HIGH": current_particle_quality_level = AdaptiveQualityManager.Quality.HIGH

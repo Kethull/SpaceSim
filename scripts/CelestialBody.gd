@@ -49,7 +49,7 @@ signal body_clicked(body: CelestialBody)
 @onready var orbit_trail: Line2D = $OrbitTrail
 @onready var gravity_field: Area2D = $GravityField
 @onready var gravity_shape: CollisionShape2D = $GravityField/GravityShape
-@onready var config_manager = get_node("/root/ConfigManager") # Access autoload
+@onready var config_manager = get_node_or_null("/root/ConfigManager") # Access autoload
 
 const PlanetAtmosphereShader = preload("res://shaders/PlanetAtmosphere.gdshader")
 
@@ -63,11 +63,13 @@ const G: float = 6.67430e-11 # Gravitational constant (m^3 kg^-1 s^-2)
 const AU_TO_METERS: float = 1.496e11 # Astronomical Unit in meters
 
 func _ready():
+	if not config_manager:
+		printerr("ConfigManager (Autoload) at path '/root/ConfigManager' not found in CelestialBody.gd _ready(). Critical features may fail.")
 	gravity_scale = 0 # We will apply gravity manually
 	
 	# Configure integration method
 	if config_manager and config_manager.config:
-		if config_manager.config.integration_method == "verlet":
+		if config_manager.get_setting("general", "integration_method", "") == "verlet":
 			custom_integrator = true
 			#print("[%s] Using Verlet integration." % body_name) # Optional: for debugging
 		#else:
@@ -208,7 +210,7 @@ func calculate_initial_state():
 		pass # Position and velocity are as set in editor or by spawner
 
 	# Initialize previous_position for Verlet integration
-	if config_manager and config_manager.config and config_manager.config.integration_method == "verlet":
+	if config_manager and config_manager.get_setting("general", "integration_method", "") == "verlet":
 		var dt = get_physics_process_delta_time()
 		if dt <= 0: # Fallback if called before first physics tick or dt is invalid
 			var ticks_per_second = Engine.get_physics_ticks_per_second()
@@ -432,7 +434,7 @@ func _integrate_forces(state: PhysicsDirectBodyState2D):
 	var bodies = get_tree().get_nodes_in_group("celestial_bodies")
 	var sim_scale = config_manager.get_setting("simulation", "simulation_scale", 1.0) # pixels per meter
 	var use_n_body = config_manager.get_setting("simulation", "use_n_body_gravity", true)
-	var max_interaction_dist_meters = config_manager.config.n_body_interaction_max_distance_meters if config_manager and config_manager.config else 1.0e18 # Default large if no config
+	var max_interaction_dist_meters = config_manager.get_setting("general", "n_body_interaction_max_distance_meters", 1.0e18) if config_manager else 1.0e18 # Default large if no config
 
 	if not use_n_body:
 		# If n-body is off, forces are only applied if explicitly handled elsewhere (e.g. fixed orbits)
@@ -493,8 +495,8 @@ func _integrate_forces(state: PhysicsDirectBodyState2D):
 	if mass_kg > 1e-6: # Avoid division by zero for massless or near-massless bodies
 		var calculated_acceleration = total_force / mass_kg
 		# Assuming config_manager.config holds the GameConfiguration resource instance
-		if calculated_acceleration.length() > config_manager.config.max_gravitational_acceleration:
-			actual_acceleration = calculated_acceleration.normalized() * config_manager.config.max_gravitational_acceleration
+		if calculated_acceleration.length() > config_manager.get_setting("general", "max_gravitational_acceleration", 1.0e18):
+			actual_acceleration = calculated_acceleration.normalized() * config_manager.get_setting("general", "max_gravitational_acceleration", 1.0e18)
 			final_force = actual_acceleration * mass_kg
 		else:
 			actual_acceleration = calculated_acceleration
@@ -510,7 +512,7 @@ func _integrate_forces(state: PhysicsDirectBodyState2D):
 	previous_acceleration = actual_acceleration
 
 func _physics_process(delta):
-	if config_manager and config_manager.config and config_manager.config.integration_method == "verlet":
+	if config_manager and config_manager.get_setting("general", "integration_method", "") == "verlet":
 		# custom_integrator = true was set in _ready.
 		# This means _integrate_forces(state) was called by the physics engine,
 		# and it calculated total_force and updated self.previous_acceleration.
@@ -547,8 +549,8 @@ func update_orbit_trail():
 		push_warning("CelestialBody: ConfigManager not available for orbit trail update.")
 		return
 
-	var max_points = config_manager.config.max_orbit_points
-	var trail_update_interval = config_manager.config.celestial_body_orbit_trail_update_interval_frames
+	var max_points = config_manager.get_setting("general", "max_orbit_points", 100)
+	var trail_update_interval = config_manager.get_setting("general", "celestial_body_orbit_trail_update_interval_frames", 10)
 
 	if trail_update_interval <= 0: # Avoid division by zero or excessive updates
 		trail_update_interval = 1 # Sensible minimum

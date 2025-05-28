@@ -11,7 +11,7 @@ const MessageData = preload("res://scripts/data/MessageData.gd") # For type hint
 
 var celestial_body_scene = preload("res://scenes/CelestialBody.tscn")
 var resource_scene = preload("res://scenes/Resource.tscn")
-var probe_scene = preload("res://scenes/probes/Probe.tscn") # Preload ProbeUnit scene
+var probe_scene = preload("res://scenes/probes/Probe.tscn") # Preload Probe scene
 # var replication_effect_scene = preload("res://effects/ReplicationEffect.tscn") # Commented out until .tscn is created
 
 # References to specific bodies for moon creation or other interactions
@@ -43,7 +43,7 @@ var current_episode: int = 1
 var current_step: int = 0
 var simulation_speed: float = 1.0
 var is_paused: bool = false
-var _current_selected_probe_node: ProbeUnit = null # Stores the currently selected probe instance
+var _current_selected_probe_node: Probe = null # Stores the currently selected probe instance
 
 # UI Update Control
 const UI_UPDATE_INTERVAL = 0.25 # seconds
@@ -368,7 +368,7 @@ func create_initial_probes():
 		return
 
 	if not probe_scene:
-		printerr("ProbeUnit scene not loaded, cannot create initial probes.")
+		printerr("Probe scene not loaded, cannot create initial probes.")
 		return
 
 	var config_manager_node = get_node_or_null("/root/ConfigManager")
@@ -407,7 +407,7 @@ func create_initial_probes():
 		connect_probe_signals(probe_instance) # Assuming connect_probe_signals is robust
 		print("Created initial probe: ID %s (Gen %d) at %s" % [probe_instance.probe_id, probe_instance.generation, str(probe_instance.global_position)])
 
-func connect_probe_signals(probe_instance: ProbeUnit): # Changed type hint to ProbeUnit
+func connect_probe_signals(probe_instance): # Removed type hint for robustness
 	if not is_instance_valid(probe_instance):
 		printerr("Attempted to connect signals for an invalid probe instance.")
 		return
@@ -448,12 +448,12 @@ func _on_probe_communication_sent(message: MessageData):
 			print("SIM_LOG: Comm Event: Sender: %s, Target: %s, Type: %s, Pos: %s, Data: %s" % [message.sender_id, message.target_id, message.message_type, str(message.position), str(message.data)])
 
 
-func _on_resource_discovered_by_probe(discovering_probe: ProbeUnit, resource_data: Dictionary): # Changed type hint and params based on ProbeUnit signal
+func _on_resource_discovered_by_probe(discovering_probe: Probe, resource_data: Dictionary): # Changed type hint and params based on Probe signal
 	if not is_instance_valid(discovering_probe):
 		print("Received resource_discovered signal from an invalid probe.")
 		return
 	
-	# The signal from ProbeUnit now sends: probe: ProbeUnit, resource_data: Dictionary
+	# The signal from Probe now sends: probe: Probe, resource_data: Dictionary
 	# resource_data is: {"id":res_node.name, "position":res_node.global_position, "type":r_data.get("type","unknown"), "amount":r_data.get("amount",0.0)}
 	var res_pos: Vector2 = resource_data.get("position", Vector2.INF)
 	var res_name: String = resource_data.get("id", "UnknownResource")
@@ -464,7 +464,7 @@ func _on_resource_discovered_by_probe(discovering_probe: ProbeUnit, resource_dat
 	# For logging, we can use the data provided.
 	# If we need the node instance ID, we'd have to find it, but the signal is about the *event* of discovery.
 	# Let's assume for now the `resource_data["id"]` (which is `res_node.name`) is unique enough for logging.
-	# If `get_instance_id()` is crucial, the signal from ProbeUnit would need to pass the node itself, or its ID.
+	# If `get_instance_id()` is crucial, the signal from Probe would need to pass the node itself, or its ID.
 	# The current `resource_discovered` signal in ProbeUnit passes a dictionary.
 	
 	var discovered_resource_node = _find_resource_at_position(res_pos) # Try to find it anyway for instance ID
@@ -494,7 +494,7 @@ func _on_resource_discovered_by_probe(discovering_probe: ProbeUnit, resource_dat
 			name_to_log = discovered_resource_node.name
 		print("Resource %s (ID: %s) is a new unique discovery. Total discovered: %d" % [name_to_log, str(resource_instance_id), discovered_resources_count])
 
-func _on_resource_harvested(resource_node: GameResource, harvesting_probe: ProbeUnit, amount_harvested: float):
+func _on_resource_harvested(resource_node: GameResource, harvesting_probe: Probe, amount_harvested: float):
 	if not is_instance_valid(resource_node) or not is_instance_valid(harvesting_probe):
 		print("Received resource_harvested signal with invalid node(s).")
 		return
@@ -649,7 +649,7 @@ func _rebuild_discovery_stats_from_loaded_resources():
 	print("Rebuilt discovery stats: %d unique resources currently marked as discovered." % discovered_resources_count)
 
 
-func _on_replication_requested(parent_probe: ProbeUnit):
+func _on_replication_requested(parent_probe: Probe):
 	var cfg_node = get_node_or_null("/root/ConfigManager")
 	if not cfg_node or not cfg_node.has_method("get_config"):
 		printerr("SimulationManager: ConfigManager not found for replication request.")
@@ -671,7 +671,7 @@ func _on_replication_requested(parent_probe: ProbeUnit):
 	create_child_probe(parent_probe)
 
 
-func create_child_probe(parent_probe: ProbeUnit):
+func create_child_probe(parent_probe: Probe):
 	if not is_instance_valid(parent_probe):
 		printerr("SimulationManager: Cannot create child probe, parent_probe is invalid.")
 		return
@@ -682,7 +682,7 @@ func create_child_probe(parent_probe: ProbeUnit):
 		return
 	var config = cfg_node.get_config()
 
-	var child_probe = probe_scene.instantiate() as ProbeUnit
+	var child_probe = probe_scene.instantiate() as Probe
 	if not child_probe:
 		printerr("SimulationManager: Failed to instantiate probe_scene for child probe.")
 		return
@@ -752,8 +752,13 @@ func create_child_probe(parent_probe: ProbeUnit):
 		# Instantiate and play replication effect
 		# if replication_effect_scene and get_node_or_null("/root/Main/ParticleManager"): # Check for ParticleManager
 		#	 var effect_instance = replication_effect_scene.instantiate()
-		#	 var particle_mgr = get_node("/root/Main/ParticleManager")
-		#	 particle_mgr.add_child(effect_instance) # Add to a dedicated manager or main scene
+		#	 var particle_manager_node = get_node_or_null("/root/Main/ParticleManager")
+		#	 if not particle_manager_node:
+		#		 printerr("ParticleManager node at path '/root/Main/ParticleManager' not found in SimulationManager. Relevant particle effects may not work.")
+		#		 # If this call is inside a function that returns, consider returning an appropriate value or void.
+		#		 # If it's critical for the function, you might 'return' here.
+		#	 else:
+		#		 particle_manager_node.add_child(effect_instance) # Add to a dedicated manager or main scene
 		#	 if effect_instance.has_method("play_effect"):
 		#		 effect_instance.play_effect(parent_probe.global_position)
 		#	 else:
@@ -804,7 +809,7 @@ func _gather_simulation_data_for_ui() -> Dictionary:
 	if is_instance_valid(probe_manager):
 		for i in range(probe_manager.get_child_count()):
 			var probe_node = probe_manager.get_child(i)
-			if probe_node is ProbeUnit: 
+			if probe_node is Probe:
 				var p_id_str = ""
 				if probe_node.has("probe_id"): # Ensure probe_id property exists
 					p_id_str = probe_node.probe_id
@@ -901,12 +906,12 @@ func _gather_simulation_data_for_ui() -> Dictionary:
 		"debug_info": debug_data
 	}
 
-func _get_probe_by_int_id(probe_int_id: int) -> ProbeUnit:
+func _get_probe_by_int_id(probe_int_id: int) -> Probe:
 	if not is_instance_valid(probe_manager):
 		return null
 	var target_probe_id_str = "ProbeUnit-" + str(probe_int_id)
 	for child in probe_manager.get_children():
-		if child is ProbeUnit and child.has("probe_id") and child.probe_id == target_probe_id_str:
+		if child is Probe and child.has("probe_id") and child.probe_id == target_probe_id_str:
 			return child
 	# printerr("ProbeUnit with int_id %d (string: %s) not found." % [probe_int_id, target_probe_id_str]) # Can be noisy
 	return null
@@ -1126,7 +1131,7 @@ func _spawn_additional_probes(count: int):
 
 	print("Stress Test: Spawning %d additional probes..." % count)
 	for i in range(count):
-		var probe_instance = probe_scene.instantiate() as ProbeUnit
+		var probe_instance = probe_scene.instantiate() as Probe
 		if not probe_instance:
 			printerr("Stress Test: Failed to instantiate probe_scene for additional probe %d." % i)
 			continue

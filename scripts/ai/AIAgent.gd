@@ -36,7 +36,7 @@ var last_known_energy_ratio: float = 0.0
 var last_known_stored_resources: float = 0.0
 var debug_rewards: bool = false # Set to true to print reward breakdown
 
-@onready var _config_manager_instance = get_node("/root/ConfigManager")
+@onready var _config_manager_instance = get_node_or_null("/root/ConfigManager")
 
 var q_learning: SimpleQLearning
 var last_state_hash: String = ""
@@ -62,23 +62,27 @@ const ACTION_ARRAY_SIZE = 5
 
 
 func _ready():
+	if not _config_manager_instance:
+		printerr("ConfigManager (Autoload) at path '/root/ConfigManager' not found in AIAgent.gd _ready(). AI functionality may be impaired.")
+	# The original check for _config_manager_instance can remain or be removed if the above printerr is sufficient.
+	# For now, let's keep it to ensure subsequent logic that relies on it still works if it *is* null.
 	if _config_manager_instance:
 		# AI Settings
-		self.update_frequency = _config_manager_instance.config.get("ai_update_interval_sec", 1.0)
-		self._ai_debug_logging_enabled = _config_manager_instance.config.get("ai_debug_logging", false)
+		self.update_frequency = _config_manager_instance.get_setting("general", "ai_update_interval_sec", 1.0)
+		self._ai_debug_logging_enabled = _config_manager_instance.get_setting("general", "ai_debug_logging", false)
 		
 		# HTTPRequest timeout (moved up for clarity with other config reads)
 		if use_external_ai:
 			http_request = HTTPRequest.new()
 			add_child(http_request)
-			http_request.timeout = _config_manager_instance.config.get("ai_request_timeout", 5.0) # Assuming this key exists or will be added
+			http_request.timeout = _config_manager_instance.get_setting("general", "ai_request_timeout", 5.0) # Assuming this key exists or will be added
 			http_request.request_completed.connect(_on_ai_response_received)
 
 		# Action space parameters
-		var thrust_magnitudes = _config_manager_instance.config.get("thrust_force_magnitudes", [0.0, 100.0])
+		var thrust_magnitudes = _config_manager_instance.get_setting("general", "thrust_force_magnitudes", [0.0, 100.0])
 		num_thrust_levels = thrust_magnitudes.size()
 		
-		var torque_magnitudes = _config_manager_instance.config.get("torque_magnitudes", [0.0, 50.0])
+		var torque_magnitudes = _config_manager_instance.get_setting("general", "torque_magnitudes", [0.0, 50.0])
 		num_torque_levels = torque_magnitudes.size()
 	else:
 		printerr("AIAgent: ConfigManager instance not found in _ready. Using default values for AI settings and action space.")
@@ -114,15 +118,15 @@ func _ready():
 	
 	var ai_config = {} # This was for a nested "ai" dictionary, direct access is better
 	if _config_manager_instance:
-		q_learning.learning_rate = _config_manager_instance.config.get("learning_rate", 0.1) # Assuming these are top-level in GameConfiguration
-		q_learning.discount_factor = _config_manager_instance.config.get("discount_factor", 0.99)
-		q_learning.epsilon = _config_manager_instance.config.get("q_epsilon_start", 1.0) # Keep specific q_epsilon if needed
-		q_learning.epsilon_decay = _config_manager_instance.config.get("q_epsilon_decay", 0.001)
-		q_learning.min_epsilon = _config_manager_instance.config.get("q_epsilon_min", 0.01)
+		q_learning.learning_rate = _config_manager_instance.get_setting("general", "learning_rate", 0.1) # Assuming these are top-level in GameConfiguration
+		q_learning.discount_factor = _config_manager_instance.get_setting("general", "discount_factor", 0.99)
+		q_learning.epsilon = _config_manager_instance.get_setting("general", "q_epsilon_start", 1.0) # Keep specific q_epsilon if needed
+		q_learning.epsilon_decay = _config_manager_instance.get_setting("general", "q_epsilon_decay", 0.001)
+		q_learning.min_epsilon = _config_manager_instance.get_setting("general", "q_epsilon_min", 0.01)
 		# For persistence
-		q_learning.save_on_end = _config_manager_instance.config.get("q_learning_save_on_episode_end", true)
-		q_learning.load_on_start = _config_manager_instance.config.get("q_learning_load_on_episode_start", true)
-		q_learning.table_filename = _config_manager_instance.config.get("q_learning_table_filename", "q_table_fallback.json")
+		q_learning.save_on_end = _config_manager_instance.get_setting("general", "q_learning_save_on_episode_end", true)
+		q_learning.load_on_start = _config_manager_instance.get_setting("general", "q_learning_load_on_episode_start", true)
+		q_learning.table_filename = _config_manager_instance.get_setting("general", "q_learning_table_filename", "q_table_fallback.json")
 	else: # Fallbacks if ConfigManager is missing
 		q_learning.learning_rate = 0.1
 		q_learning.discount_factor = 0.99
@@ -229,7 +233,7 @@ func request_external_action():
 	
 	var expected_obs_size = -1
 	if _config_manager_instance:
-		expected_obs_size = _config_manager_instance.config.get("observation_space_size", -1)
+		expected_obs_size = _config_manager_instance.get_setting("general", "observation_space_size", -1)
 		
 	if expected_obs_size != -1: 
 		if flat_observation.size() != expected_obs_size:
@@ -256,7 +260,7 @@ func flatten_observation(obs: Dictionary) -> Array:
 	var flat_obs = []
 	var obs_space_size = 25 # Default
 	if _config_manager_instance:
-		obs_space_size = _config_manager_instance.config.get("observation_space_size", 25)
+		obs_space_size = _config_manager_instance.get_setting("general", "observation_space_size", 25)
 
 	var world_bounds_x = 10000.0
 	var world_bounds_y = 10000.0
@@ -271,17 +275,17 @@ func flatten_observation(obs: Dictionary) -> Array:
 	var max_gravity_influence_norm = 0.01
 
 	if _config_manager_instance:
-		world_bounds_x = _config_manager_instance.config.get("world_bounds_x", 10000.0)
-		world_bounds_y = _config_manager_instance.config.get("world_bounds_y", 10000.0)
-		max_probe_speed = _config_manager_instance.config.get("max_probe_speed_for_norm", 1000.0)
-		max_probe_angular_vel = _config_manager_instance.config.get("max_probe_angular_vel_for_norm", PI)
-		num_observed_resources = _config_manager_instance.config.get("num_observed_resources", 3)
-		max_res_dist_norm = _config_manager_instance.config.get("max_resource_distance_for_norm", 1000.0)
-		max_res_amount_norm = _config_manager_instance.config.get("max_resource_amount_for_norm", 20000.0)
-		num_observed_celestial_bodies = _config_manager_instance.config.get("num_observed_celestial_bodies", 2)
-		max_celestial_dist_norm = _config_manager_instance.config.get("max_celestial_distance_for_norm", 10000.0)
-		celestial_mass_norm_factor = _config_manager_instance.config.get("celestial_mass_norm_factor", 1e24)
-		max_gravity_influence_norm = _config_manager_instance.config.get("max_gravity_influence_for_norm", 0.01)
+		world_bounds_x = _config_manager_instance.get_setting("general", "world_bounds_x", 10000.0)
+		world_bounds_y = _config_manager_instance.get_setting("general", "world_bounds_y", 10000.0)
+		max_probe_speed = _config_manager_instance.get_setting("general", "max_probe_speed_for_norm", 1000.0)
+		max_probe_angular_vel = _config_manager_instance.get_setting("general", "max_probe_angular_vel_for_norm", PI)
+		num_observed_resources = _config_manager_instance.get_setting("general", "num_observed_resources", 3)
+		max_res_dist_norm = _config_manager_instance.get_setting("general", "max_resource_distance_for_norm", 1000.0)
+		max_res_amount_norm = _config_manager_instance.get_setting("general", "max_resource_amount_for_norm", 20000.0)
+		num_observed_celestial_bodies = _config_manager_instance.get_setting("general", "num_observed_celestial_bodies", 2)
+		max_celestial_dist_norm = _config_manager_instance.get_setting("general", "max_celestial_distance_for_norm", 10000.0)
+		celestial_mass_norm_factor = _config_manager_instance.get_setting("general", "celestial_mass_norm_factor", 1e24)
+		max_gravity_influence_norm = _config_manager_instance.get_setting("general", "max_gravity_influence_for_norm", 0.01)
 
 	var probe_pos = obs.get("position", Vector2.ZERO)
 	flat_obs.append(probe_pos.x / world_bounds_x)
@@ -666,7 +670,7 @@ func calculate_reward() -> float:
 
 	var rf = {} # Reward Factors
 	if _config_manager_instance:
-		rf = _config_manager_instance.config.get("reward_factors", {})
+		rf = _config_manager_instance.get_setting("general", "reward_factors", {})
 	else: # Fallback defaults matching GameConfiguration structure
 		rf = { "stay_alive": 0.02, "mining": 0.05, "high_energy": 0.1,
 			   "low_energy_penalty": -0.5, "critical_energy_penalty": -2.0,
@@ -747,7 +751,8 @@ func calculate_reward() -> float:
 		var dist_to_ai_target = parent_probe.get_distance_to_observed_resource_idx(ai_target_resource_idx)
 		if dist_to_ai_target >= 0: # Valid distance
 			var proximity_factor = rf.get("proximity", 1.95)
-			var normalization_factor = _config_manager_instance.config.get("max_resource_distance_for_norm", 1000.0) if _config_manager_instance else 1000.0
+			var cfg_ai750 = _config_manager_instance.get_config() if _config_manager_instance else null
+			var normalization_factor = cfg_ai750.get_setting("general", "max_resource_distance_for_norm", 1000.0) if cfg_ai750 else 1000.0
 			if normalization_factor <= 0: normalization_factor = 1000.0
 			var proximity_r = proximity_factor * exp(-dist_to_ai_target / (normalization_factor / 10.0))
 			total_reward += proximity_r
@@ -875,7 +880,7 @@ func _on_resource_discovered(probe_node: Node, resource_data: Dictionary): # Pro
 	if probe_node == parent_probe: # Ensure it's for this agent's probe
 		var rf = {}
 		if _config_manager_instance:
-			rf = _config_manager_instance.config.get("reward_factors", {})
+			rf = _config_manager_instance.get_setting("general", "reward_factors", {})
 		var bonus = rf.get("discovery_bonus", 1.5)
 		self.last_reward += bonus # Accumulate event-based reward
 		
@@ -889,7 +894,7 @@ func _on_resource_discovered(probe_node: Node, resource_data: Dictionary): # Pro
 # Placeholder for collision signal handler (emitted by Probe.gd)
 # func _on_probe_collided(collided_with_type: String, impact_severity: float):
 # 	if parent_probe: # Ensure it's for this agent's probe
-# 		var rf = _config_manager_instance.config.get("reward_factors", {}) if _config_manager_instance else {}
+# var rf = _config_manager_instance.get_setting("general", "reward_factors", {}) if _config_manager_instance else {}
 # 		var penalty = rf.get("collision_penalty", -5.0) * impact_severity # Scale penalty by severity
 # 		self.last_reward += penalty # Accumulate event-based penalty
 # 		if debug_rewards:

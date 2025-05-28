@@ -21,6 +21,10 @@ ObjectPoolManager="*res://scripts/ObjectPoolManager.gd"
 AdaptiveQualityManager="*res://scripts/AdaptiveQualityManager.gd"
 ConfigManager="*res://scripts/ConfigManager.gd"
 AudioManager="*res://scripts/managers/AudioManager.gd"
+LODManager="*res://scripts/LODManager.gd"
+AdvancedParticleManager="*res://scripts/managers/AdvancedParticleManager.gd"
+SaveLoadManager="*res://scripts/managers/SaveLoadManager.gd"
+PerformanceMonitor="*res://scripts/PerformanceMonitor.gd"
 
 [input]
 

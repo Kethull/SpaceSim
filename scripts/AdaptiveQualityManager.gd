@@ -25,14 +25,14 @@ var min_time_in_level: float = 5.0 # Minimum time to stay in a quality level to 
 func _ready():
 	print("AdaptiveQualityManager Initialized.")
 	if config_manager and config_manager.config:
-		fps_threshold_low = config_manager.config.get("adaptive_quality_fps_low", 30.0)
-		fps_threshold_medium_target = config_manager.config.get("adaptive_quality_fps_medium_target", 45.0)
-		fps_threshold_high = config_manager.config.get("adaptive_quality_fps_high", 55.0)
-		fps_threshold_medium_fallback = config_manager.config.get("adaptive_quality_fps_medium_fallback", 50.0)
-		update_interval = config_manager.config.get("adaptive_quality_update_interval", 1.0)
-		min_time_in_level = config_manager.config.get("adaptive_quality_min_time_in_level", 5.0)
-		
-		var initial_quality_str = config_manager.config.get("adaptive_quality_initial_level", "MEDIUM")
+		fps_threshold_low = config_manager.get_setting("general", "adaptive_quality_fps_low", 30.0)
+		fps_threshold_medium_target = config_manager.get_setting("general", "adaptive_quality_fps_medium_target", 45.0)
+		fps_threshold_high = config_manager.get_setting("general", "adaptive_quality_fps_high", 55.0)
+		fps_threshold_medium_fallback = config_manager.get_setting("general", "adaptive_quality_fps_medium_fallback", 50.0)
+		update_interval = config_manager.get_setting("general", "adaptive_quality_update_interval", 1.0)
+		min_time_in_level = config_manager.get_setting("general", "adaptive_quality_min_time_in_level", 5.0)
+
+		var initial_quality_str = config_manager.get_setting("general", "adaptive_quality_initial_level", "MEDIUM")
 		match initial_quality_str.to_upper():
 			"LOW":
 				current_quality_level = Quality.LOW

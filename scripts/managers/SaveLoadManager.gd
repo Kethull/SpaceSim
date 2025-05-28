@@ -49,7 +49,12 @@ func _ready():
 	# It's good practice to get node references here if they are static in the scene tree
 	# For dynamically spawned things or singletons, you might get them on-demand.
 	# Assuming SimulationManager is an autoload or easily accessible
-	# simulation_manager = get_node("/root/SimulationManager") # Adjust path as needed
+	# var sim_manager_node = get_node_or_null("/root/SimulationManager") # Adjust path as needed
+	# if not sim_manager_node:
+	#	 printerr("SimulationManager (Autoload) at path '/root/SimulationManager' not found in SaveLoadManager. Save/Load functionality may be impaired.")
+	#	 # If critical for the function, 'return' or handle appropriately.
+	# else:
+	#	 # Original logic using sim_manager_node
 	# camera_2d = get_viewport().get_camera_2d() # Or however you access your main camera
 
 #region Public API

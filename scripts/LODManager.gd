@@ -1,4 +1,3 @@
-class_name LODManager
 extends Node
 
 # Predefined distance thresholds for LOD levels.
@@ -23,8 +22,8 @@ func _ready():
 	print("LODManager Initialized.")
 	
 	if config_manager and config_manager.config:
-		base_lod_distances = config_manager.config.get("lod_base_distances", [500.0, 1500.0, 3000.0])
-		var initial_quality_str = config_manager.config.get("adaptive_quality_initial_level", "MEDIUM")
+		base_lod_distances = config_manager.get_setting("general", "lod_base_distances", [500.0, 1500.0, 3000.0])
+		var initial_quality_str = config_manager.get_setting("general", "adaptive_quality_initial_level", "MEDIUM")
 		match initial_quality_str.to_upper():
 			"LOW": current_lod_quality_level = AdaptiveQualityManager.Quality.LOW
 			"HIGH": current_lod_quality_level = AdaptiveQualityManager.Quality.HIGH
@@ -143,11 +142,11 @@ func _apply_lod_distance_multipliers(level: AdaptiveQualityManager.Quality):
 	if config_manager and config_manager.config:
 		match level:
 			AdaptiveQualityManager.Quality.LOW:
-				multiplier = config_manager.config.get("lod_distance_multiplier_low", 0.75)
+				multiplier = config_manager.get_setting("general", "lod_distance_multiplier_low", 0.75)
 			AdaptiveQualityManager.Quality.MEDIUM:
-				multiplier = config_manager.config.get("lod_distance_multiplier_medium", 1.0)
+				multiplier = config_manager.get_setting("general", "lod_distance_multiplier_medium", 1.0)
 			AdaptiveQualityManager.Quality.HIGH:
-				multiplier = config_manager.config.get("lod_distance_multiplier_high", 1.25)
+				multiplier = config_manager.get_setting("general", "lod_distance_multiplier_high", 1.25)
 	
 	current_lod_distances = []
 	for dist in base_lod_distances:

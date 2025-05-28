@@ -73,8 +73,8 @@ func _ready():
     # setup_particle_effects()
     
     # Connect signals
-    # body_entered.connect(_on_body_entered)
-    # body_exited.connect(_on_body_exited)
+    body_entered.connect(_on_body_entered)
+    body_exited.connect(_on_body_exited)
     
     # Start glow animation
     # start_glow_animation()
@@ -144,11 +144,30 @@ func discover(discovering_probe: Node): # Probe class might not be defined yet
         # printerr("Resource %s: discover() called with invalid probe." % name)
 
 
-# func _on_body_entered(body):
-    # pass # Temporarily pass
+func get_resource_data() -> Dictionary:
+    return {
+        "type": resource_type,
+        "amount": current_amount,
+        "type_id": get_resource_type_id(),
+        "max_amount": max_amount
+    }
 
-# func _on_body_exited(body):
-    # pass # Temporarily pass
+func get_resource_type_id() -> int:
+    match resource_type:
+        "mineral": return 0
+        "energy": return 1
+        "rare_earth": return 2
+        "water": return 3
+        _: return 0 # Default or handle error appropriately
+
+func get_current_amount() -> float:
+    return current_amount
+
+func _on_body_entered(body):
+    pass # Temporarily pass
+
+func _on_body_exited(body):
+    pass # Temporarily pass
 
 # func _notification(what):
     # pass # Temporarily pass

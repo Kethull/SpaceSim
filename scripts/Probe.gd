@@ -133,7 +133,7 @@ func _ready():
 	add_child(_debug_target_line)
 	
 	if ConfigManager and ConfigManager.config:
-		_show_debug_visuals = ConfigManager.config.get("ai_show_debug_visuals", false)
+		_show_debug_visuals = ConfigManager.get_setting("general", "ai_show_debug_visuals", false)
 	
 	_debug_label.visible = _show_debug_visuals
 	_debug_target_line.visible = _show_debug_visuals
@@ -282,9 +282,9 @@ func setup_advanced_visual_effects():
 func _integrate_forces(state: PhysicsDirectBodyState2D):
 	var total_gravitational_force = Vector2.ZERO
 	if ConfigManager and ConfigManager.config:
-		var sim_scale = ConfigManager.config.get("simulation_scale", 1.0) # pixels per meter
-		var use_n_body = ConfigManager.config.get("use_n_body_gravity", true) # Assuming this applies to probes too
-		var max_interaction_dist_meters = ConfigManager.config.n_body_interaction_max_distance_meters
+		var sim_scale = ConfigManager.get_setting("general", "simulation_scale", 1.0) # pixels per meter
+		var use_n_body = ConfigManager.get_setting("general", "use_n_body_gravity", true) # Assuming this applies to probes too
+		var max_interaction_dist_meters = ConfigManager.get_setting("general", "n_body_interaction_max_distance_meters", 1.0e18)
 		
 		if use_n_body:
 			var celestial_bodies = get_tree().get_nodes_in_group("celestial_bodies")
@@ -478,14 +478,14 @@ func update_movement_trail():
 		return
 
 	# Use enable_particle_effects to also control trails for simplicity
-	if not ConfigManager.config.get("enable_particle_effects", true):
+	if not ConfigManager.get_setting("general", "enable_particle_effects", true):
 		movement_trail.visible = false
 		return
 	
 	movement_trail.visible = true
 
-	var max_points = ConfigManager.config.max_trail_points
-	var trail_update_interval = ConfigManager.config.probe_movement_trail_update_interval_frames
+	var max_points = ConfigManager.get_setting("general", "max_trail_points", 100)
+	var trail_update_interval = ConfigManager.get_setting("general", "probe_movement_trail_update_interval_frames", 10)
 
 	if trail_update_interval <= 0: # Prevent division by zero or too frequent updates
 		trail_update_interval = 1
@@ -629,7 +629,7 @@ func _update_debug_visuals():
 
 	var should_show_now = false
 	if ConfigManager and ConfigManager.config:
-		should_show_now = ConfigManager.config.get("ai_show_debug_visuals", false)
+		should_show_now = ConfigManager.get_setting("general", "ai_show_debug_visuals", false)
 
 	if _show_debug_visuals != should_show_now: # Update if changed
 		_show_debug_visuals = should_show_now
