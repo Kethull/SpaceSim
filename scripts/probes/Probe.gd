@@ -93,11 +93,21 @@ func _ready() -> void:
 	var cfg_initial = _config_manager_instance.get_config() if _config_manager_instance else null
 	
 	if cfg_initial:
-		if probe_mass <= 0.001: probe_mass = cfg_initial.get("probe_mass", 1.0)
+		if probe_mass <= 0.001:
+			var _temp_val_L96 = cfg_initial.get("probe_mass")
+			if _temp_val_L96 != null:
+				probe_mass = _temp_val_L96
+			else:
+				probe_mass = 1.0
 	mass = probe_mass
 
 	if cfg_initial:
-		if max_energy_capacity <= 0.001: max_energy_capacity = cfg_initial.get("initial_energy", 100.0)
+		if max_energy_capacity <= 0.001:
+			var _temp_val_L100 = cfg_initial.get("initial_energy")
+			if _temp_val_L100 != null:
+				max_energy_capacity = _temp_val_L100
+			else:
+				max_energy_capacity = 100.0
 	
 	if current_energy > max_energy_capacity or (current_energy <= 0.001 and max_energy_capacity > 0):
 		current_energy = max_energy_capacity
@@ -201,7 +211,9 @@ func _physics_process(delta: float) -> void:
 	var actual_decay_rate: float
 	var cfg_physics = _config_manager_instance.get_config() if _config_manager_instance else null
 	if energy_decay_rate_override >= 0: actual_decay_rate = energy_decay_rate_override
-	elif cfg_physics: actual_decay_rate = cfg_physics.get("energy_decay_rate", 0.1)
+	elif cfg_physics:
+		var decay_rate_from_config = cfg_physics.get("energy_decay_rate")
+		actual_decay_rate = decay_rate_from_config if decay_rate_from_config != null else 0.1 # Default if key is missing or value is null
 	else: actual_decay_rate = 0.1
 	current_energy = max(0.0, current_energy - actual_decay_rate * delta)
 
@@ -249,27 +261,43 @@ func _integrate_forces(state: PhysicsDirectBodyState2D) -> void:
 		return
 
 	if is_thrusting and current_thrust_level_idx > 0 and thrust_ramp_ratio > 0.01:
-		var thrust_magnitudes = cfg.get("thrust_force_magnitudes", [0.0, 200.0])
+		var _temp_val_L254 = cfg.get("thrust_force_magnitudes")
+		var thrust_magnitudes
+		if _temp_val_L254 != null:
+			thrust_magnitudes = _temp_val_L254
+		else:
+			thrust_magnitudes = [0.0, 200.0]
 		if current_thrust_level_idx < thrust_magnitudes.size():
 			var thrust_force = thrust_magnitudes[current_thrust_level_idx]
 			var actual_thrust = thrust_force * thrust_ramp_ratio
 			state.apply_central_force(Vector2(1, 0).rotated(rotation) * actual_thrust)
-			current_energy -= abs(actual_thrust) * cfg.get("thrust_energy_cost_factor", 0.1) * state.step
+			var _temp_val_L259 = cfg.get("thrust_energy_cost_factor")
+			var _actual_val_L259 = _temp_val_L259 if _temp_val_L259 != null else 0.1
+			current_energy -= abs(actual_thrust) * _actual_val_L259 * state.step
 		else: printerr("Probe %s: Invalid thrust_idx %d" % [probe_id, current_thrust_level_idx])
 
 	if is_applying_torque and current_torque_level_idx > 0 and current_commanded_rotation_direction != 0 and rotation_ramp_ratio > 0.01:
-		var torque_mags = cfg.get("torque_magnitudes", [0.0, 30.0])
+		var _temp_val_L263 = cfg.get("torque_magnitudes")
+		var torque_mags
+		if _temp_val_L263 != null:
+			torque_mags = _temp_val_L263
+		else:
+			torque_mags = [0.0, 30.0]
 		if current_torque_level_idx < torque_mags.size():
 			var torque_magnitude = torque_mags[current_torque_level_idx]
 			var actual_torque = torque_magnitude * current_commanded_rotation_direction * rotation_ramp_ratio
 			state.apply_torque(actual_torque)
-			current_energy -= abs(actual_torque) * cfg.get("rotation_energy_cost_factor", 0.05) * state.step
+			var _temp_val_L268 = cfg.get("rotation_energy_cost_factor")
+			var _actual_val_L268 = _temp_val_L268 if _temp_val_L268 != null else 0.05
+			current_energy -= abs(actual_torque) * _actual_val_L268 * state.step
 		else: printerr("Probe %s: Invalid torque_idx %d" % [probe_id, current_torque_level_idx])
 	
-	var m_vel = cfg.get("max_velocity", 200.0)
+	var _temp_val_L271 = cfg.get("max_velocity")
+	var m_vel = _temp_val_L271 if _temp_val_L271 != null else 200.0
 	if state.linear_velocity.length_squared() > m_vel * m_vel:
 		state.linear_velocity = state.linear_velocity.normalized() * m_vel
-	var m_ang_vel = cfg.get("max_angular_velocity", PI)
+	var _temp_val_L274 = cfg.get("max_angular_velocity")
+	var m_ang_vel = _temp_val_L274 if _temp_val_L274 != null else PI
 	if abs(state.angular_velocity) > m_ang_vel:
 		state.angular_velocity = sign(state.angular_velocity) * m_ang_vel
 
@@ -325,7 +353,8 @@ func update_action_smoothing(delta: float) -> void:
 func set_thrust_level(level_idx: int) -> void:
 	var cfg = _config_manager_instance.get_config()
 	if not cfg: is_thrusting = false; current_thrust_level_idx = 0; return
-	var thrust_mags = cfg.get("thrust_force_magnitudes", [])
+	var _temp_val_L330 = cfg.get("thrust_force_magnitudes")
+	var thrust_mags = _temp_val_L330 if _temp_val_L330 != null else []
 	if level_idx >= 0 and level_idx < thrust_mags.size():
 		current_thrust_level_idx = level_idx
 		is_thrusting = (level_idx > 0)
@@ -334,7 +363,8 @@ func set_thrust_level(level_idx: int) -> void:
 func set_torque_level(level_idx: int, direction: int) -> void:
 	var cfg = _config_manager_instance.get_config()
 	if not cfg: is_applying_torque = false; current_torque_level_idx = 0; current_commanded_rotation_direction = 0; return
-	var torque_mags = cfg.get("torque_magnitudes", [])
+	var _temp_val_L339 = cfg.get("torque_magnitudes")
+	var torque_mags = _temp_val_L339 if _temp_val_L339 != null else []
 	if level_idx >= 0 and level_idx < torque_mags.size():
 		if direction >= -1 and direction <= 1:
 			current_torque_level_idx = level_idx
@@ -357,24 +387,32 @@ func attempt_replication() -> bool:
 		return false
 
 	if replication_cooldown_remaining > 0:
-		if cfg.get("ai_debug_logging", false):
+		var _temp_val_L362 = cfg.get("ai_debug_logging")
+		var _actual_val_L362 = _temp_val_L362 if _temp_val_L362 != null else false
+		if _actual_val_L362:
 			print_debug("Probe %s: Replication attempt failed - Cooldown active (%.1fs left)." % [probe_id, replication_cooldown_remaining])
 		return false
 
-	var cost_energy = cfg.get("replication_cost", 80000.0)
-	var min_energy_to_attempt = cfg.get("replication_min_energy", 90000.0) # Absolute minimum energy to even try
+	var _temp_val_L366 = cfg.get("replication_cost")
+	var cost_energy = _temp_val_L366 if _temp_val_L366 != null else 80000.0
+	var _temp_val_L367 = cfg.get("replication_min_energy")
+	var min_energy_to_attempt = _temp_val_L367 if _temp_val_L367 != null else 90000.0 # Absolute minimum energy to even try
 	# var resource_cost = cfg.get("replication_resource_cost", 500.0) # Assuming resources are not a direct cost for now as per prompt focus
 
 	# Refined Energy Checks:
 	# 1. Must have at least min_energy_to_attempt to consider replication.
 	if current_energy < min_energy_to_attempt:
-		if cfg.get("ai_debug_logging", false):
+		var _temp_val_L373 = cfg.get("ai_debug_logging")
+		var _actual_val_L373 = _temp_val_L373 if _temp_val_L373 != null else false
+		if _actual_val_L373:
 			print_debug("Probe %s: Replication attempt failed - Below minimum energy threshold to attempt (need %.1f, have %.1f)." % [probe_id, min_energy_to_attempt, current_energy])
 		return false
 
 	# 2. Must have enough energy to cover the actual replication_cost.
 	if current_energy < cost_energy:
-		if cfg.get("ai_debug_logging", false):
+		var _temp_val_L379 = cfg.get("ai_debug_logging")
+		var _actual_val_L379 = _temp_val_L379 if _temp_val_L379 != null else false
+		if _actual_val_L379:
 			print_debug("Probe %s: Replication attempt failed - Insufficient energy for cost (need %.1f, have %.1f)." % [probe_id, cost_energy, current_energy])
 		return false
 	
@@ -391,11 +429,14 @@ func attempt_replication() -> bool:
 	# Reset cooldown and update stats AFTER successfully emitting the request
 	# The actual success of creating a child is handled by SimulationManager.
 	# The probe considers its part done once the request is made and cost paid.
-	replication_cooldown_remaining = cfg.get("replication_cooldown_sec", 60.0) # Use new config key
+	var _temp_val_L396 = cfg.get("replication_cooldown_sec")
+	replication_cooldown_remaining = _temp_val_L396 if _temp_val_L396 != null else 60.0 # Use new config key
 	times_replicated += 1
 	_just_replicated = true # Flag for AI reward system
 
-	if cfg.get("ai_debug_logging", false):
+	var _temp_val_L400 = cfg.get("ai_debug_logging")
+	var _actual_val_L400 = _temp_val_L400 if _temp_val_L400 != null else false
+	if _actual_val_L400:
 		print_debug("Probe %s: Replication requested. Energy deducted: %.1f. Cooldown set. Times replicated: %d." % [probe_id, cost_energy, times_replicated])
 
 	if visual_component: # Simple visual feedback for request
@@ -411,7 +452,8 @@ func replication_globally_failed():
 	var cfg = _config_manager_instance.get_config()
 	if not cfg: return
 
-	var cost_energy = cfg.get("replication_cost", 80000.0)
+	var _temp_val_L416 = cfg.get("replication_cost")
+	var cost_energy = _temp_val_L416 if _temp_val_L416 != null else 80000.0
 	current_energy += cost_energy # Refund energy
 	# stored_resources += resource_cost # Refund resources if they were used
 
@@ -420,7 +462,9 @@ func replication_globally_failed():
 	times_replicated = max(0, times_replicated -1) # Decrement if it was incremented
 	_just_replicated = false # Clear flag
 
-	if cfg.get("ai_debug_logging", false):
+	var _temp_val_L425 = cfg.get("ai_debug_logging")
+	var _actual_val_L425 = _temp_val_L425 if _temp_val_L425 != null else false
+	if _actual_val_L425:
 		print_debug("Probe %s: Replication globally failed. Energy refunded. Cooldown reset." % probe_id)
 
 
@@ -469,7 +513,8 @@ func set_target_resource_node(resource_node: Node) -> bool:
 func start_mining() -> void:
 	if not current_target_resource_node or not is_instance_valid(current_target_resource_node): if is_mining_active: stop_mining(); return
 	var cfg = _config_manager_instance.get_config(); if not cfg: if is_mining_active: stop_mining(); return
-	var mining_dist = cfg.get("harvest_distance", 50.0)
+	var _temp_val_L474 = cfg.get("harvest_distance")
+	var mining_dist = _temp_val_L474 if _temp_val_L474 != null else 50.0
 	if global_position.distance_squared_to(current_target_resource_node.global_position) <= mining_dist * mining_dist:
 		if not is_mining_active:
 			is_mining_active = true
@@ -504,7 +549,8 @@ func _process_mining(delta: float) -> void:
 		# Subsequent logic needing cfg won't run. If cfg becomes available, it might proceed next frame.
 		return
 		
-	var harvest_distance_value = cfg.get("harvest_distance", 50.0)
+	var _temp_val_L509 = cfg.get("harvest_distance")
+	var harvest_distance_value = _temp_val_L509 if _temp_val_L509 != null else 50.0
 	
 	# Double-check validity before accessing global_position
 	if not current_target_resource_node or not is_instance_valid(current_target_resource_node):
@@ -527,7 +573,8 @@ func _process_mining(delta: float) -> void:
 	# --- Integrated rest of original function's logic (lines 485-498 of original) with safety checks ---
 	
 	# Mining energy cost (cfg is confirmed valid at this point)
-	var mining_energy_cost_value = cfg.get("mining_energy_cost_per_second", 1.0)
+	var _temp_val_L532 = cfg.get("mining_energy_cost_per_second")
+	var mining_energy_cost_value = _temp_val_L532 if _temp_val_L532 != null else 1.0
 		
 	if current_energy < mining_energy_cost_value * delta:
 		stop_mining()
@@ -542,7 +589,8 @@ func _process_mining(delta: float) -> void:
 		return
 
 	if current_target_resource_node.has_method("harvest"):
-		var harvest_rate_value = cfg.get("harvest_rate", 10.0)
+		var _temp_val_L547 = cfg.get("harvest_rate")
+		var harvest_rate_value = _temp_val_L547 if _temp_val_L547 != null else 10.0
 		var harvested_amount = current_target_resource_node.harvest(harvest_rate_value * delta) # This might invalidate the node
 		
 		if harvested_amount > 0:
@@ -622,7 +670,11 @@ func _handle_sensor_interaction(node: Node2D, entered: bool) -> void:
 			if not in_cache: nearby_observed_resources_cache.append(res_node)
 			if res_node.has_method("get_resource_data"): # For discovery signal
 				var r_data = res_node.get_resource_data()
-				resource_discovered.emit(self, {"id":res_node.name, "position":res_node.global_position, "type":r_data.get("type","unknown"), "amount":r_data.get("amount",0.0)})
+				var _temp_type_L627 = r_data.get("type")
+				var _actual_type_L627 = _temp_type_L627 if _temp_type_L627 != null else "unknown"
+				var _temp_amount_L627 = r_data.get("amount")
+				var _actual_amount_L627 = _temp_amount_L627 if _temp_amount_L627 != null else 0.0
+				resource_discovered.emit(self, {"id":res_node.name, "position":res_node.global_position, "type":_actual_type_L627, "amount":_actual_amount_L627})
 		else: # Exited
 			for i in range(nearby_observed_resources_cache.size()-1, -1, -1): if nearby_observed_resources_cache[i]==res_node: nearby_observed_resources_cache.remove_at(i); break
 			# CRITICAL: Clear target if it was the exiting resource
@@ -673,13 +725,15 @@ func send_communication(target_probe: ProbeUnit, message_type: MessageData.Messa
 		# print_debug("Probe %s: Communication failed - Cooldown active (%.1fs left)." % [probe_id, communication_cooldown_remaining])
 		return false
 
-	var energy_cost = cfg.get("communication_energy_cost", 5.0) # Default if not in config
+	var _temp_val_L678 = cfg.get("communication_energy_cost")
+	var energy_cost = _temp_val_L678 if _temp_val_L678 != null else 5.0 # Default if not in config
 	if current_energy < energy_cost:
 		# print_debug("Probe %s: Communication failed - Insufficient energy (need %.1f, have %.1f)." % [probe_id, energy_cost, current_energy])
 		return false
 
 	current_energy -= energy_cost
-	communication_cooldown_remaining = cfg.get("communication_cooldown", 5.0) # Default if not in config
+	var _temp_val_L684 = cfg.get("communication_cooldown")
+	communication_cooldown_remaining = _temp_val_L684 if _temp_val_L684 != null else 5.0 # Default if not in config
 	
 	var msg_target_id = target_probe.probe_id if is_instance_valid(target_probe) else "BROADCAST"
 	# MessageData constructor handles timestamp and sets global_position from sender
@@ -711,7 +765,9 @@ func send_communication(target_probe: ProbeUnit, message_type: MessageData.Messa
 				beam_instance.setup_effect(global_position, target_probe.global_position)
 	else: # Broadcast
 		var nearby_probes_list: Array[ProbeUnit] = get_nearby_probes()
-		if nearby_probes_list.is_empty() and cfg.get("ai_debug_logging", false):
+		var _temp_val_L716 = cfg.get("ai_debug_logging")
+		var _actual_val_L716 = _temp_val_L716 if _temp_val_L716 != null else false
+		if nearby_probes_list.is_empty() and _actual_val_L716:
 			print_debug("Probe %s: Broadcast message type %s, but no probes in range." % [probe_id, MessageData.MessageType.keys()[message_type]])
 
 		for other_probe in nearby_probes_list:
@@ -729,9 +785,12 @@ func send_communication(target_probe: ProbeUnit, message_type: MessageData.Messa
 	communication_sent.emit(message) # Emit signal regardless of direct/broadcast for logging
 	_last_communication_successful = sent_to_at_least_one # Considered successful if sent to target or any in broadcast
 	
-	if cfg.get("ai_debug_logging", false) and _last_communication_successful:
+	var _temp_val_debug_logging = cfg.get("ai_debug_logging")
+	var actual_debug_logging = _temp_val_debug_logging if _temp_val_debug_logging != null else false
+
+	if actual_debug_logging and _last_communication_successful:
 		print_debug("Probe %s: Sent '%s'. Target: %s. Payload: %s. Energy left: %.1f" % [probe_id, MessageData.MessageType.keys()[message_type], msg_target_id, str(payload), current_energy])
-	elif cfg.get("ai_debug_logging", false) and not sent_to_at_least_one and not is_instance_valid(target_probe):
+	elif actual_debug_logging and not sent_to_at_least_one and not is_instance_valid(target_probe):
 		# Log broadcast attempt even if no one received, if debug is on
 		pass # Already logged above if list was empty
 
@@ -739,16 +798,24 @@ func send_communication(target_probe: ProbeUnit, message_type: MessageData.Messa
 
 func receive_message(message: MessageData) -> void:
 	var cfg = _config_manager_instance.get_config()
-	var debug_logging = cfg.get("ai_debug_logging", false) if cfg else false
+	var debug_logging
+	if cfg:
+		var _temp_val_L744 = cfg.get("ai_debug_logging")
+		debug_logging = _temp_val_L744 if _temp_val_L744 != null else false
+	else:
+		debug_logging = false
 
 	if debug_logging:
 		print_debug("Probe %s: Received message from %s. Type: %s. Data: %s" % [probe_id, message.sender_id, MessageData.MessageType.keys()[message.message_type], str(message.data)])
 
 	match message.message_type:
 		MessageData.MessageType.RESOURCE_LOCATION: # Use enum directly
-			var res_pos: Vector2 = message.data.get("resource_pos", Vector2.INF) # Use INF as invalid default
-			var res_type: String = message.data.get("resource_type", "unknown")
-			var res_id: String = message.data.get("resource_id", "") # Optional ID of the resource node
+			var _temp_val_L751 = message.data.get("resource_pos")
+			var res_pos: Vector2 = _temp_val_L751 if _temp_val_L751 != null else Vector2.INF # Use INF as invalid default
+			var _temp_val_L752 = message.data.get("resource_type")
+			var res_type: String = _temp_val_L752 if _temp_val_L752 != null else "unknown"
+			var _temp_val_L753 = message.data.get("resource_id")
+			var res_id: String = _temp_val_L753 if _temp_val_L753 != null else "" # Optional ID of the resource node
 
 			if res_pos != Vector2.INF:
 				# Store with position as key, could also use resource_id if consistently available and unique
@@ -797,7 +864,7 @@ func receive_message(message: MessageData) -> void:
 func update_movement_trail() -> void:
 	if not movement_trail: return
 	var cfg = _config_manager_instance.get_config(); var max_pts = 50
-	if cfg: max_pts = cfg.get("max_trail_points", 50)
+	if cfg: max_pts = cfg.get("max_trail_points")
 	trail_points.push_front(global_position); while trail_points.size() > max_pts: trail_points.pop_back()
 	movement_trail.clear_points(); for p in trail_points: movement_trail.add_point(to_local(p))
 
@@ -847,7 +914,14 @@ func get_observation_data() -> Dictionary:
 	for res_node in nearby_observed_resources_cache:
 		if is_instance_valid(res_node):
 			var r_data = {"id": res_node.name, "position": res_node.global_position, "distance": global_position.distance_to(res_node.global_position)}
-			if res_node.has_method("get_resource_data"): var internal_data = res_node.get_resource_data(); r_data["type_id"]=internal_data.get("type_id",0); r_data["amount"]=internal_data.get("amount",0.0)
+			if res_node.has_method("get_resource_data"):
+				var internal_data = res_node.get_resource_data()
+				var _temp_type_id_L852 = internal_data.get("type_id")
+				var _actual_type_id_L852 = _temp_type_id_L852 if _temp_type_id_L852 != null else 0
+				r_data["type_id"] = _actual_type_id_L852
+				var _temp_amount_L852 = internal_data.get("amount")
+				var _actual_amount_L852 = _temp_amount_L852 if _temp_amount_L852 != null else 0.0
+				r_data["amount"] = _actual_amount_L852
 			elif res_node.has_property("resource_type_id") and res_node.has_property("current_amount"): r_data["type_id"]=res_node.get("resource_type_id"); r_data["amount"]=res_node.get("current_amount")
 			else: r_data["type_id"]=0; r_data["amount"]=0.0
 			nearby_res_data.append(r_data)
@@ -873,11 +947,17 @@ func get_observation_data() -> Dictionary:
 	var known_res_obs_data = []
 	for pos_key in known_resource_locations:
 		var res_info = known_resource_locations[pos_key]
+		var _temp_val_L880 = res_info.get("type")
+		var _actual_val_L880 = _temp_val_L880 if _temp_val_L880 != null else "unknown"
+		var _temp_val_L881 = res_info.get("timestamp")
+		var _actual_val_L881 = _temp_val_L881 if _temp_val_L881 != null else 0
+		var _temp_val_L882 = res_info.get("sender_id")
+		var _actual_val_L882 = _temp_val_L882 if _temp_val_L882 != null else ""
 		known_res_obs_data.append({
 			"position": pos_key, # This is already a Vector2
-			"type": res_info.get("type", "unknown"),
-			"timestamp": res_info.get("timestamp", 0),
-			"shared_by": res_info.get("sender_id", "")
+			"type": _actual_val_L880,
+			"timestamp": _actual_val_L881,
+			"shared_by": _actual_val_L882
 		})
 	obs["known_resource_locations_shared"] = known_res_obs_data
 	
@@ -948,7 +1028,8 @@ func apply_manual_thrust():
 	# Corresponds to a high thrust level, e.g., index 3 if available
 	var cfg = _config_manager_instance.get_config()
 	if cfg:
-		var thrust_mags = cfg.get("thrust_force_magnitudes", [0.0, 0.08, 0.18, 0.32])
+		var _temp_val_L953 = cfg.get("thrust_force_magnitudes")
+		var thrust_mags = _temp_val_L953 if _temp_val_L953 != null else [0.0, 0.08, 0.18, 0.32]
 		var highest_level_idx = thrust_mags.size() - 1
 		if highest_level_idx > 0:
 			set_thrust_level(highest_level_idx)
@@ -965,7 +1046,8 @@ func apply_manual_rotation(direction_str: String):
 	var direction = -1 if direction_str == "left" else 1
 	var cfg = _config_manager_instance.get_config()
 	if cfg:
-		var torque_mags = cfg.get("torque_magnitudes", [0.0, 0.008, 0.018])
+		var _temp_val_L970 = cfg.get("torque_magnitudes")
+		var torque_mags = _temp_val_L970 if _temp_val_L970 != null else [0.0, 0.008, 0.018]
 		var highest_level_idx = torque_mags.size() - 1
 		if highest_level_idx > 0:
 			set_torque_level(highest_level_idx, direction)

@@ -136,18 +136,24 @@ func _process(delta):
 func _create_celestial_body(data: Dictionary):
 	var body_instance = celestial_body_scene.instantiate()
 	
-	body_instance.body_name = data.get("body_name", "Unnamed Body")
-	body_instance.mass_kg = data.get("mass_kg", 0.0)
-	body_instance.radius_km = data.get("radius_km", 0.0)
-	body_instance.display_radius = data.get("display_radius", 10.0)
-	body_instance.body_color = data.get("body_color", Color.WHITE)
+	var _temp_val_L139 = data.get("body_name")
+	body_instance.body_name = _temp_val_L139 if _temp_val_L139 != null else "Unnamed Body"
+	var _temp_val_L140 = data.get("mass_kg")
+	body_instance.mass_kg = _temp_val_L140 if _temp_val_L140 != null else 0.0
+	var _temp_val_L141 = data.get("radius_km")
+	body_instance.radius_km = _temp_val_L141 if _temp_val_L141 != null else 0.0
+	var _temp_val_L142 = data.get("display_radius")
+	body_instance.display_radius = _temp_val_L142 if _temp_val_L142 != null else 10.0
+	var _temp_val_L143 = data.get("body_color")
+	body_instance.body_color = _temp_val_L143 if _temp_val_L143 != null else Color.WHITE
 	
 	if data.has("semi_major_axis_au"):
 		body_instance.semi_major_axis_au = data.get("semi_major_axis_au")
 	if data.has("eccentricity"):
 		body_instance.eccentricity = data.get("eccentricity")
 	
-	body_instance.central_body_name = data.get("central_body_name", "")
+	var _temp_val_L150 = data.get("central_body_name")
+	body_instance.central_body_name = _temp_val_L150 if _temp_val_L150 != null else ""
 
 	# Add to scene tree. CelestialBody.gd's _ready() should handle its own initialization
 	# (like calling calculate_initial_state and setup_visual_appearance)
@@ -444,7 +450,9 @@ func _on_probe_communication_sent(message: MessageData):
 	var cfg_node = get_node_or_null("/root/ConfigManager")
 	if cfg_node and cfg_node.has_method("get_config"):
 		var game_cfg = cfg_node.get_config()
-		if game_cfg and game_cfg.get("ai_debug_logging", false):
+		var _temp_val_L447 = game_cfg.get("ai_debug_logging")
+		var _actual_val_L447 = _temp_val_L447 if _temp_val_L447 != null else false
+		if game_cfg and _actual_val_L447:
 			print("SIM_LOG: Comm Event: Sender: %s, Target: %s, Type: %s, Pos: %s, Data: %s" % [message.sender_id, message.target_id, message.message_type, str(message.position), str(message.data)])
 
 
@@ -455,10 +463,14 @@ func _on_resource_discovered_by_probe(discovering_probe: Probe, resource_data: D
 	
 	# The signal from Probe now sends: probe: Probe, resource_data: Dictionary
 	# resource_data is: {"id":res_node.name, "position":res_node.global_position, "type":r_data.get("type","unknown"), "amount":r_data.get("amount",0.0)}
-	var res_pos: Vector2 = resource_data.get("position", Vector2.INF)
-	var res_name: String = resource_data.get("id", "UnknownResource")
-	var res_type: String = resource_data.get("type", "unknown")
-	var res_amount: float = resource_data.get("amount", 0.0)
+	var _temp_val_L458 = resource_data.get("position")
+	var res_pos: Vector2 = _temp_val_L458 if _temp_val_L458 != null else Vector2.INF
+	var _temp_val_L459 = resource_data.get("id")
+	var res_name: String = _temp_val_L459 if _temp_val_L459 != null else "UnknownResource"
+	var _temp_val_L460 = resource_data.get("type")
+	var res_type: String = _temp_val_L460 if _temp_val_L460 != null else "unknown"
+	var _temp_val_L461 = resource_data.get("amount")
+	var res_amount: float = _temp_val_L461 if _temp_val_L461 != null else 0.0
 	
 	# We might not have the actual GameResource node here if it's just data.
 	# For logging, we can use the data provided.
@@ -589,16 +601,26 @@ func load_simulation(save_data): # save_data: SimulationSaveData
 				printerr("Failed to instantiate resource scene for loading.")
 				continue
 
-			res_instance.global_position = r_data.get("position", Vector2.ZERO)
-			res_instance.current_amount = r_data.get("current_amount", 0.0)
-			res_instance.max_amount = r_data.get("max_amount", 100.0)
-			res_instance.resource_type = r_data.get("resource_type", "unknown")
-			res_instance.regeneration_rate = r_data.get("regeneration_rate", 0.0)
-			res_instance.discovered_by = r_data.get("discovered_by", []).duplicate(true)
+			var _temp_val_L592 = r_data.get("position")
+			res_instance.global_position = _temp_val_L592 if _temp_val_L592 != null else Vector2.ZERO
+			var _temp_val_L593 = r_data.get("current_amount")
+			res_instance.current_amount = _temp_val_L593 if _temp_val_L593 != null else 0.0
+			var _temp_val_L594 = r_data.get("max_amount")
+			res_instance.max_amount = _temp_val_L594 if _temp_val_L594 != null else 100.0
+			var _temp_val_L595 = r_data.get("resource_type")
+			res_instance.resource_type = _temp_val_L595 if _temp_val_L595 != null else "unknown"
+			var _temp_val_L596 = r_data.get("regeneration_rate")
+			res_instance.regeneration_rate = _temp_val_L596 if _temp_val_L596 != null else 0.0
+			var _temp_val_L597 = r_data.get("discovered_by")
+			var _actual_val_L597 = _temp_val_L597 if _temp_val_L597 != null else []
+			res_instance.discovered_by = _actual_val_L597.duplicate(true)
 			if res_instance.has_setter("harvest_difficulty"):
-				res_instance.set("harvest_difficulty", r_data.get("harvest_difficulty", 1.0))
+				var _temp_val_L599 = r_data.get("harvest_difficulty")
+				var _actual_val_L599 = _temp_val_L599 if _temp_val_L599 != null else 1.0
+				res_instance.set("harvest_difficulty", _actual_val_L599)
 			elif res_instance.has("harvest_difficulty"):
-				res_instance.harvest_difficulty = r_data.get("harvest_difficulty", 1.0)
+				var _temp_val_L601 = r_data.get("harvest_difficulty")
+				res_instance.harvest_difficulty = _temp_val_L601 if _temp_val_L601 != null else 1.0
 
 
 			resource_manager.add_child(res_instance)
@@ -613,14 +635,25 @@ func load_simulation(save_data): # save_data: SimulationSaveData
 	# Restore SimulationManager's stats
 	if save_data.has("sim_mgr_stats"):
 		var stats = save_data.sim_mgr_stats
-		total_initial_resources_value = stats.get("total_initial_resources_value", 0.0)
-		current_total_resources_value = stats.get("current_total_resources_value", 0.0)
-		resources_by_type_count = stats.get("resources_by_type_count", {}).duplicate(true)
-		discovered_resources_count = stats.get("discovered_resources_count", 0)
-		depleted_resources_count = stats.get("depleted_resources_count", 0)
-		total_resources_mined = stats.get("total_resources_mined", 0.0)
-		_discovered_resource_ids = stats.get("discovered_resource_ids", []).duplicate(true)
-		discovered_resources_log = stats.get("discovered_resources_log", []).duplicate(true)
+		var _temp_val_L616 = stats.get("total_initial_resources_value")
+		total_initial_resources_value = _temp_val_L616 if _temp_val_L616 != null else 0.0
+		var _temp_val_L617 = stats.get("current_total_resources_value")
+		current_total_resources_value = _temp_val_L617 if _temp_val_L617 != null else 0.0
+		var _temp_val_L618 = stats.get("resources_by_type_count")
+		var _actual_val_L618 = _temp_val_L618 if _temp_val_L618 != null else {}
+		resources_by_type_count = _actual_val_L618.duplicate(true)
+		var _temp_val_L619 = stats.get("discovered_resources_count")
+		discovered_resources_count = _temp_val_L619 if _temp_val_L619 != null else 0
+		var _temp_val_L620 = stats.get("depleted_resources_count")
+		depleted_resources_count = _temp_val_L620 if _temp_val_L620 != null else 0
+		var _temp_val_L621 = stats.get("total_resources_mined")
+		total_resources_mined = _temp_val_L621 if _temp_val_L621 != null else 0.0
+		var _temp_val_L622 = stats.get("discovered_resource_ids")
+		var _actual_val_L622 = _temp_val_L622 if _temp_val_L622 != null else []
+		_discovered_resource_ids = _actual_val_L622.duplicate(true)
+		var _temp_val_L623 = stats.get("discovered_resources_log")
+		var _actual_val_L623 = _temp_val_L623 if _temp_val_L623 != null else []
+		discovered_resources_log = _actual_val_L623.duplicate(true)
 		print("Restored SimulationManager stats from save data.")
 	else:
 		# Fallback: Recalculate if not saved explicitly
@@ -658,11 +691,14 @@ func _on_replication_requested(parent_probe: Probe):
 		return
 
 	var config = cfg_node.get_config()
-	var max_probes_allowed = config.get("max_probes", 20)
+	var _temp_val_L661 = config.get("max_probes")
+	var max_probes_allowed = _temp_val_L661 if _temp_val_L661 != null else 20
 	var current_probe_count = get_tree().get_nodes_in_group("probes").size()
 
 	if current_probe_count >= max_probes_allowed:
-		if config.get("ai_debug_logging", false):
+		var _temp_val_L665 = config.get("ai_debug_logging")
+		var _actual_val_L665 = _temp_val_L665 if _temp_val_L665 != null else false
+		if _actual_val_L665:
 			print_debug("SimulationManager: Replication denied for ProbeUnit %s. Max probe limit (%d) reached. Current: %d" % [parent_probe.probe_id, max_probes_allowed, current_probe_count])
 		if is_instance_valid(parent_probe) and parent_probe.has_method("replication_globally_failed"):
 			parent_probe.replication_globally_failed()
@@ -692,26 +728,34 @@ func create_child_probe(parent_probe: Probe):
 	child_probe.probe_id = "ProbeUnit-G%d-%s" % [child_probe.generation, OS.get_unique_id().substr(0,6)] # Simple unique ID
 
 	# Initial Energy for child
-	child_probe.current_energy = config.get("initial_energy", 50000.0)
-	child_probe.max_energy_capacity = config.get("max_energy", 100000.0) # Base max energy
+	var _temp_val_L695 = config.get("initial_energy")
+	child_probe.current_energy = _temp_val_L695 if _temp_val_L695 != null else 50000.0
+	var _temp_val_L696 = config.get("max_energy")
+	child_probe.max_energy_capacity = _temp_val_L696 if _temp_val_L696 != null else 100000.0 # Base max energy
 
 	# Genetic Variations
-	var mutation_chance = config.get("replication_mutation_chance", 0.05)
-	var mutation_factor = config.get("replication_mutation_factor_small", 0.1)
+	var _temp_val_L699 = config.get("replication_mutation_chance")
+	var mutation_chance = _temp_val_L699 if _temp_val_L699 != null else 0.05
+	var _temp_val_L700 = config.get("replication_mutation_factor_small")
+	var mutation_factor = _temp_val_L700 if _temp_val_L700 != null else 0.1
 
 	if randf() < mutation_chance:
 		var mutated_property_log = "Mutations: "
 		# Mutate max_energy_capacity
 		var original_max_energy = child_probe.max_energy_capacity
 		child_probe.max_energy_capacity *= (1.0 + randf_range(-mutation_factor, mutation_factor))
-		child_probe.max_energy_capacity = max(child_probe.max_energy_capacity, config.get("initial_energy", 10000.0) * 0.5) # Ensure it's not too low
+		var _temp_val_L707 = config.get("initial_energy")
+		var _actual_val_L707 = _temp_val_L707 if _temp_val_L707 != null else 10000.0
+		child_probe.max_energy_capacity = max(child_probe.max_energy_capacity, _actual_val_L707 * 0.5) # Ensure it's not too low
 		mutated_property_log += "max_energy (%.0f -> %.0f), " % [original_max_energy, child_probe.max_energy_capacity]
 		
 		# Ensure current energy is not more than new max capacity after mutation
 		child_probe.current_energy = min(child_probe.current_energy, child_probe.max_energy_capacity)
 
 		# Mutate one of the thrust_force_magnitudes (excluding level 0)
-		var thrust_magnitudes: Array[float] = config.get("thrust_force_magnitudes", [0.0, 0.08, 0.18, 0.32]).duplicate() # Get a copy
+		var _temp_val_L714 = config.get("thrust_force_magnitudes")
+		var _actual_val_L714 = _temp_val_L714 if _temp_val_L714 != null else [0.0, 0.08, 0.18, 0.32]
+		var thrust_magnitudes: Array[float] = _actual_val_L714.duplicate() # Get a copy
 		if thrust_magnitudes.size() > 1:
 			var rand_idx = randi_range(1, thrust_magnitudes.size() - 1) # Pick a non-zero thrust level
 			var original_thrust = thrust_magnitudes[rand_idx]
@@ -723,7 +767,9 @@ func create_child_probe(parent_probe: Probe):
 			# For now, logging the intent. A more complex system would store these overrides on the probe.
 			mutated_property_log += "thrust_level_%d (%.3f -> %.3f)" % [rand_idx, original_thrust, thrust_magnitudes[rand_idx]]
 		
-		if config.get("ai_debug_logging", false):
+		var _temp_val_L726 = config.get("ai_debug_logging")
+		var _actual_val_L726 = _temp_val_L726 if _temp_val_L726 != null else false
+		if _actual_val_L726:
 			print_debug("ProbeUnit %s (Child of %s): %s" % [child_probe.probe_id, parent_probe.probe_id, mutated_property_log])
 
 	# Positioning: Slightly offset from parent
@@ -738,7 +784,9 @@ func create_child_probe(parent_probe: Probe):
 		connect_probe_signals(child_probe)
 		total_replications += 1
 
-		if config.get("ai_debug_logging", false) or true: # Keep this log for now
+		var _temp_val_L741 = config.get("ai_debug_logging")
+		var _actual_val_L741 = _temp_val_L741 if _temp_val_L741 != null else false
+		if _actual_val_L741 or true: # Keep this log for now
 			print("SimulationManager: Child ProbeUnit %s (Gen %d) created from Parent %s. Pos: %s. Total Replications: %d" % [child_probe.probe_id, child_probe.generation, parent_probe.probe_id, str(child_probe.global_position.round()), total_replications])
 
 		# Play replication sound
@@ -980,7 +1028,8 @@ func _on_ui_action_requested(action_type: String, data: Dictionary):
 		"quick_save":
 			_quick_save_simulation()
 		"manual_thrust", "manual_rotate", "manual_replicate", "toggle_ai":
-			var probe_int_id_from_data = data.get("probe_id", -1)
+			var _temp_val_L983 = data.get("probe_id")
+			var probe_int_id_from_data = _temp_val_L983 if _temp_val_L983 != null else -1
 			var target_probe_node = null
 
 			if probe_int_id_from_data != -1:
@@ -996,7 +1045,8 @@ func _on_ui_action_requested(action_type: String, data: Dictionary):
 						else:
 							printerr("ProbeUnit %s has no method apply_manual_thrust" % target_probe_node.probe_id)
 					"manual_rotate":
-						var direction = data.get("direction", "left")
+						var _temp_val_L999 = data.get("direction")
+						var direction = _temp_val_L999 if _temp_val_L999 != null else "left"
 						if target_probe_node.has_method("apply_manual_rotation"):
 							target_probe_node.apply_manual_rotation(direction)
 						else:
@@ -1007,7 +1057,8 @@ func _on_ui_action_requested(action_type: String, data: Dictionary):
 						else:
 							printerr("ProbeUnit %s has no method initiate_replication" % target_probe_node.probe_id)
 					"toggle_ai":
-						var enabled = data.get("enabled", true)
+						var _temp_val_L1010 = data.get("enabled")
+						var enabled = _temp_val_L1010 if _temp_val_L1010 != null else true
 						if target_probe_node.has_method("set_ai_enabled"):
 							target_probe_node.set_ai_enabled(enabled)
 						else:

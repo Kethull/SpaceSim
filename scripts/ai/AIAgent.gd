@@ -156,7 +156,7 @@ func initialize(probe: Node):
 	pending_action = false
 	previously_mining_target_id = ""
 	steps_since_significant_action = 0
-	if parent_probe and parent_probe.is_instance_valid():
+	if parent_probe and is_instance_valid(parent_probe):
 		last_known_position = parent_probe.global_position
 		if parent_probe.has_method("get_observation_data"): # Get initial energy/resources
 			var initial_obs_for_reward_state = parent_probe.get_observation_data()
@@ -197,7 +197,7 @@ func initialize(probe: Node):
 
 
 func update_step(delta: float):
-	if not parent_probe or not parent_probe.is_instance_valid() or not parent_probe.is_alive:
+	if not parent_probe or not is_instance_valid(parent_probe) or not parent_probe.is_alive:
 		return
 
 	action_timer += delta
@@ -207,7 +207,7 @@ func update_step(delta: float):
 			request_action()
 
 func request_action():
-	if not parent_probe or not parent_probe.is_instance_valid() or not parent_probe.has_method("get_observation_data"):
+	if not parent_probe or not is_instance_valid(parent_probe) or not parent_probe.has_method("get_observation_data"):
 		printerr("AIAgent: Cannot request action, parent probe or get_observation_data missing.")
 		return
 
@@ -326,7 +326,7 @@ func flatten_observation(obs: Dictionary) -> Array:
 	return flat_obs
 
 func request_builtin_action():
-	if not parent_probe or not parent_probe.is_instance_valid():
+	if not parent_probe or not is_instance_valid(parent_probe):
 		printerr("AIAgent: Built-in action requested, but parent probe is invalid.")
 		return
 
@@ -557,7 +557,7 @@ func _on_ai_response_received(result: int, response_code: int, headers: PackedSt
 func apply_action(action: Array):
 	var start_apply_time = Time.get_ticks_usec()
 
-	if not parent_probe or not parent_probe.is_instance_valid():
+	if not parent_probe or not is_instance_valid(parent_probe):
 		_time_action_apply_usec = Time.get_ticks_usec() - start_apply_time # Still record time even if error
 		_update_average_timing(_time_action_apply_usec, "_avg_time_action_apply_usec")
 		printerr("AIAgent: Cannot apply action, parent probe is missing or invalid.")
@@ -663,7 +663,7 @@ func apply_action(action: Array):
 		print("Probe %s: Applied action %s. ApplyTime: %.3fms" % [parent_probe.get("probe_id"), _action_to_string(action), _time_action_apply_usec / 1000.0])
 
 func calculate_reward() -> float:
-	if not parent_probe or not parent_probe.is_instance_valid(): return 0.0
+	if not parent_probe or not is_instance_valid(parent_probe): return 0.0
 
 	var total_reward: float = 0.0
 	var reward_components: Dictionary = {} # For debugging

@@ -372,10 +372,16 @@ func _input(event):
 		debug_panel.visible = !debug_panel.visible
 
 func update_ui_data(simulation_data: Dictionary):
-	update_probe_list(simulation_data.get("probes", {}))
+	var _temp_val_L375 = simulation_data.get("probes")
+	var _actual_val_L375 = _temp_val_L375 if _temp_val_L375 != null else {}
+	update_probe_list(_actual_val_L375)
 	update_selected_probe_info(simulation_data.get("selected_probe"))
-	update_system_stats(simulation_data.get("stats", {}))
-	update_debug_info(simulation_data.get("debug_info", {}))
+	var _temp_val_L377 = simulation_data.get("stats")
+	var _actual_val_L377 = _temp_val_L377 if _temp_val_L377 != null else {}
+	update_system_stats(_actual_val_L377)
+	var _temp_val_L378 = simulation_data.get("debug_info")
+	var _actual_val_L378 = _temp_val_L378 if _temp_val_L378 != null else {}
+	update_debug_info(_actual_val_L378)
 
 func update_probe_list(probes_data: Dictionary):
 	self.probe_data_cache = probes_data # Cache for focus_next_probe
@@ -404,7 +410,11 @@ func create_probe_list_item(probe_id: int, probe_data: Dictionary) -> Control:
 	name_label.add_theme_color_override("font_color", Color.WHITE)
 	
 	var status_label = Label.new()
-	var energy_ratio = probe_data.get("energy", 0) / probe_data.get("max_energy", 1)
+	var _temp_val_L407_1 = probe_data.get("energy")
+	var _actual_val_L407_1 = _temp_val_L407_1 if _temp_val_L407_1 != null else 0
+	var _temp_val_L407_2 = probe_data.get("max_energy")
+	var _actual_val_L407_2 = _temp_val_L407_2 if _temp_val_L407_2 != null else 1
+	var energy_ratio = _actual_val_L407_1 / _actual_val_L407_2
 	status_label.text = "Energy: " + str(int(energy_ratio * 100)) + "%"
 	
 	if energy_ratio > 0.7:
@@ -425,7 +435,9 @@ func create_probe_list_item(probe_id: int, probe_data: Dictionary) -> Control:
 	# Status indicator
 	var status_indicator = ColorRect.new()
 	status_indicator.size = Vector2(20, 20)
-	if probe_data.get("is_alive", false):
+	var _temp_val_L428 = probe_data.get("is_alive")
+	var _actual_val_L428 = _temp_val_L428 if _temp_val_L428 != null else false
+	if _actual_val_L428:
 		status_indicator.color = Color.GREEN if energy_ratio > 0.3 else Color.YELLOW
 	else:
 		status_indicator.color = Color.RED
@@ -478,14 +490,28 @@ func update_probe_info_display(container: Control, probe_data: Dictionary):
 		child.queue_free()
 	
 	# Add probe information
+	var _temp_val_L482 = probe_data.get("id")
+	var _actual_val_L482 = _temp_val_L482 if _temp_val_L482 != null else "Unknown"
+	var _temp_val_L483 = probe_data.get("generation")
+	var _actual_val_L483 = _temp_val_L483 if _temp_val_L483 != null else 0
+	var _temp_val_L484 = probe_data.get("position")
+	var _actual_val_L484 = _temp_val_L484 if _temp_val_L484 != null else Vector2.ZERO
+	var _temp_val_L485 = probe_data.get("velocity")
+	var _actual_val_L485 = _temp_val_L485 if _temp_val_L485 != null else Vector2.ZERO
+	var _temp_val_L486 = probe_data.get("current_task")
+	var _actual_val_L486 = _temp_val_L486 if _temp_val_L486 != null else "Idle"
+	var _temp_val_L487 = probe_data.get("current_target_id")
+	var _actual_val_L487 = _temp_val_L487 if _temp_val_L487 != null else "None"
+	var _temp_val_L488 = probe_data.get("is_alive")
+	var _actual_val_L488 = _temp_val_L488 if _temp_val_L488 != null else false
 	var info_items = [
-		["ID", str(probe_data.get("id", "Unknown"))],
-		["Generation", str(probe_data.get("generation", 0))],
-		["Position", "(" + str(int(probe_data.get("position", Vector2.ZERO).x)) + ", " + str(int(probe_data.get("position", Vector2.ZERO).y)) + ")"],
-		["Velocity", str(probe_data.get("velocity", Vector2.ZERO).length()).pad_decimals(1) + " u/s"],
-		["Task", probe_data.get("current_task", "Idle")],
-		["Target", str(probe_data.get("current_target_id", "None"))],
-		["Status", "Alive" if probe_data.get("is_alive", false) else "Dead"]
+		["ID", str(_actual_val_L482)],
+		["Generation", str(_actual_val_L483)],
+		["Position", "(" + str(int(_actual_val_L484.x)) + ", " + str(int(_actual_val_L484.y)) + ")"],
+		["Velocity", str(_actual_val_L485.length()).pad_decimals(1) + " u/s"],
+		["Task", _actual_val_L486],
+		["Target", str(_actual_val_L487)],
+		["Status", "Alive" if _actual_val_L488 else "Dead"]
 	]
 	
 	for item in info_items:
@@ -512,14 +538,28 @@ func update_system_stats(stats_data: Dictionary):
 		child.queue_free()
 	
 	# Add statistics
+	var _temp_val_L516 = stats_data.get("episode")
+	var _actual_val_L516 = _temp_val_L516 if _temp_val_L516 != null else 0
+	var _temp_val_L517 = stats_data.get("step")
+	var _actual_val_L517 = _temp_val_L517 if _temp_val_L517 != null else 0
+	var _temp_val_L518 = stats_data.get("fps")
+	var _actual_val_L518 = _temp_val_L518 if _temp_val_L518 != null else 60
+	var _temp_val_L519 = stats_data.get("probe_count")
+	var _actual_val_L519 = _temp_val_L519 if _temp_val_L519 != null else 0
+	var _temp_val_L520 = stats_data.get("resources_mined")
+	var _actual_val_L520 = _temp_val_L520 if _temp_val_L520 != null else 0
+	var _temp_val_L521 = stats_data.get("active_resources")
+	var _actual_val_L521 = _temp_val_L521 if _temp_val_L521 != null else 0
+	var _temp_val_L522 = stats_data.get("sim_speed")
+	var _actual_val_L522 = _temp_val_L522 if _temp_val_L522 != null else 1.0
 	var stat_items = [
-		["Episode", str(stats_data.get("episode", 0))],
-		["Step", str(stats_data.get("step", 0))],
-		["FPS", str(stats_data.get("fps", 60)).pad_decimals(1)],
-		["Active Probes", str(stats_data.get("probe_count", 0))],
-		["Resources Mined", str(stats_data.get("resources_mined", 0)).pad_decimals(1)],
-		["Active Resources", str(stats_data.get("active_resources", 0))],
-		["Simulation Speed", str(stats_data.get("sim_speed", 1.0)) + "x"]
+		["Episode", str(_actual_val_L516)],
+		["Step", str(_actual_val_L517)],
+		["FPS", str(_actual_val_L518).pad_decimals(1)],
+		["Active Probes", str(_actual_val_L519)],
+		["Resources Mined", str(_actual_val_L520).pad_decimals(1)],
+		["Active Resources", str(_actual_val_L521)],
+		["Simulation Speed", str(_actual_val_L522) + "x"]
 	]
 	
 	for item in stat_items:
@@ -592,9 +632,13 @@ func update_debug_info(debug_data: Dictionary):
    
 	# Add metrics from debug_data if they are not covered or are specific (e.g., AI times)
 	if debug_data.has("ai_time_ms"):
-		metrics_to_display.append(["AI Update Time", str(debug_data.get("ai_time_ms", 0)) + " ms"])
+		var _temp_val_L595 = debug_data.get("ai_time_ms")
+		var _actual_val_L595 = _temp_val_L595 if _temp_val_L595 != null else 0
+		metrics_to_display.append(["AI Update Time", str(_actual_val_L595) + " ms"])
 	if debug_data.has("particle_count"): # This would be game-specific particle count
-		metrics_to_display.append(["Game Particles", str(debug_data.get("particle_count", 0))])
+		var _temp_val_L597 = debug_data.get("particle_count")
+		var _actual_val_L597 = _temp_val_L597 if _temp_val_L597 != null else 0
+		metrics_to_display.append(["Game Particles", str(_actual_val_L597)])
    
    
 	for metric_data in metrics_to_display:
