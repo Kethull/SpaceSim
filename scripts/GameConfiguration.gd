@@ -145,3 +145,31 @@ class_name GameConfiguration
 @export var particle_lifetime_multiplier_high: float = 1.0
 # Example: A specific particle effect might also have a "disable_on_low_quality: bool" property
 # that it checks based on the quality level passed to it.
+
+@export_group("Simulation Settings")
+@export var gravity_field_radius_multiplier: float = 5.0
+@export var simulation_scale: float = 1.0  # pixels per meter
+@export var kepler_max_iterations: int = 100
+@export var enable_gravity_field_interactions: bool = true
+
+@export_group("Performance Settings Extended")
+@export var enable_orbit_trails: bool = true
+
+@export_group("Probe Settings Extended")
+@export var rup_spd: float = 2.0  # thrust ramp up speed
+@export var thrust_ramp_down_speed: float = 3.0
+@export var rotation_ramp_up_speed: float = 2.5
+@export var rotation_ramp_down_speed: float = 3.5
+@export var sensor_range: float = 150.0
+@export var mining_energy_cost_per_second: float = 1.0
+
+# === World/Physics Settings ===
+@export var world_bounds_x: float = 10000.0
+@export var world_bounds_y: float = 10000.0
+@export var max_probe_speed_for_norm: float = 1000.0
+@export var max_probe_angular_vel_for_norm: float = 3.14159
+@export var max_resource_distance_for_norm: float = 1000.0
+@export var max_resource_amount_for_norm: float = 20000.0
+@export var max_celestial_distance_for_norm: float = 10000.0
+@export var celestial_mass_norm_factor: float = 1e24
+@export var max_gravity_influence_for_norm: float = 0.01

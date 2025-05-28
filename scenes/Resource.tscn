@@ -1,71 +1,38 @@
-[gd_scene load_steps=6 format=3]
+[gd_scene load_steps=4 format=3 uid="uid://c0g7q8s1h2w3xRob3Sc3n3"]
 
-[ext_resource type="Script" path="res://scripts/Resource.gd" id="1_g2x3y"]
+[ext_resource type="Script" path="res://scripts/Resource.gd" id="1_resource_gd"]
+[ext_resource type="Texture2D" path="res://icon.svg" id="2_icon_svg"] ; Placeholder, replace with actual resource texture
 
-[sub_resource type="CircleShape2D" id="shp01"]
-radius = 50.0
-
-[sub_resource type="Gradient" id="grd01"]
-colors = PackedColorArray(1, 1, 1, 1, 1, 1, 1, 0)
-
-[sub_resource type="GradientTexture2D" id="tex01"]
-gradient = SubResource("grd01")
-width = 64
-height = 64
-fill = 1
-fill_from = Vector2(0.5, 0.5)
-fill_to = Vector2(1, 0.5)
-
-[sub_resource type="ParticleProcessMaterial" id="mat01"]
-emission_shape = 1
-emission_sphere_radius = 30.0
-particle_flag_disable_z = true
-gravity = Vector3(0, -20, 0)
-initial_velocity_min = 5.0
-initial_velocity_max = 15.0
-orbit_velocity_min = 0.0
-orbit_velocity_max = 0.0
-scale_min = 0.2
-scale_max = 0.8
-color = Color(0, 1, 1, 1)
+[sub_resource type="CircleShape2D" id="SubResource_ResourceShape"]
+radius = 10.0
 
 [node name="Resource" type="Area2D"]
-script = ExtResource("1_g2x3y")
+collision_layer = 4 ; Layer 3 (0-indexed) for resources
+collision_mask = 0  ; Resources don't need to detect anything themselves typically
+script = ExtResource("1_resource_gd")
 
 [node name="CollectionShape" type="CollisionShape2D" parent="."]
-shape = SubResource("shp01")
+shape = SubResource("SubResource_ResourceShape")
 
 [node name="ResourceSprite" type="Sprite2D" parent="."]
-modulate = Color(0, 1, 0, 1)
-scale = Vector2(1, 1)
-;texture = preload("res://icon.svg")
+scale = Vector2(0.08, 0.08)
+texture = ExtResource("2_icon_svg") ; Placeholder
 
 [node name="GlowEffect" type="Sprite2D" parent="."]
-modulate = Color(0, 0.7, 0, 0.6) ; Default to mineral glow
-scale = Vector2(1.8, 1.8)
-texture = SubResource("tex01")
+modulate = Color(1, 1, 1, 0.5)
+scale = Vector2(0.12, 0.12)
+texture = ExtResource("2_icon_svg") ; Placeholder for glow
 
 [node name="AmountLabel" type="Label" parent="."]
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
 offset_left = -20.0
-offset_top = -40.0
+offset_top = -25.0
 offset_right = 20.0
-offset_bottom = -17.0
-grow_horizontal = 2
-grow_vertical = 2
-text = "20000"
+offset_bottom = -2.0
+text = "1000"
 horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="ParticleEffect" type="GPUParticles2D" parent="."]
-amount = 20
-process_material = SubResource("mat01")
-;texture = preload("res://icon.svg") ; Placeholder particle texture, can be a small white circle
-lifetime = 4.0
-preprocess = 0.0
+; Basic particle setup, customize as needed
 
 [node name="AudioComponent" type="AudioStreamPlayer2D" parent="."]

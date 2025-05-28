@@ -1,120 +1,115 @@
-[gd_scene load_steps=5 format=3 uid="uid://b0jklm2n3p4q"]
+[gd_scene load_steps=7 format=3 uid="uid://d1kfj32lq09dpRob3Sc3n3"]
 
-[ext_resource type="Script" path="res://scripts/probes/Probe.gd" id="1_probe_script"]
+[ext_resource type="Script" path="res://scripts/probes/Probe.gd" id="1_probe_gd"]
+[ext_resource type="Texture2D" path="res://icon.svg" id="2_icon_svg"]
+[ext_resource type="Script" path="res://scripts/ai/AIAgent.gd" id="3_aiagent_gd"]
 
-[sub_resource type="CircleShape2D" id="CircleShape2D_main_collider"]
-radius = 8.0 ; Default radius, visual scale might change this effectively
+[sub_resource type="CircleShape2D" id="SubResource_ProbeShape"]
+radius = 12.0
 
-[sub_resource type="CircleShape2D" id="CircleShape2D_sensor_shape"]
-radius = 100.0 ; Placeholder radius for sensor area
+[sub_resource type="CircleShape2D" id="SubResource_SensorShape"]
+radius = 150.0
 
-[sub_resource type="CircleShape2D" id="CircleShape2D_comm_shape"]
-radius = 200.0 ; Placeholder radius for communication range
+[sub_resource type="CircleShape2D" id="SubResource_CommShape"]
+radius = 200.0
 
 [node name="Probe" type="RigidBody2D"]
-script = ExtResource("1_probe_script")
-# probe_mass, max_energy_capacity, etc. are script exports,
-# potentially initialized/overridden by spawner or ConfigManager via script.
+collision_layer = 2
+collision_mask = 5
+script = ExtResource("1_probe_gd")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
-shape = SubResource("CircleShape2D_main_collider")
+shape = SubResource("SubResource_ProbeShape")
 
 [node name="VisualComponent" type="Node2D" parent="."]
-unique_name_in_owner = true 
-# Script scales this based on ConfigManager.config.probe_size
 
 [node name="HullSprite" type="Sprite2D" parent="VisualComponent"]
-unique_name_in_owner = true
-# Texture: A placeholder could be assigned here, e.g., load("res://icon.svg") and scaled down
-# Modulate will be set by Probe.gd based on generation
+scale = Vector2(0.1, 0.1)
+texture = ExtResource("2_icon_svg")
 
 [node name="SolarPanels" type="Node2D" parent="VisualComponent"]
-unique_name_in_owner = true
+position = Vector2(0, 5)
 
 [node name="LeftPanel" type="Sprite2D" parent="VisualComponent/SolarPanels"]
-unique_name_in_owner = true
-# Placeholder texture/position
+position = Vector2(-15, 0)
+scale = Vector2(0.08, 0.03)
+texture = ExtResource("2_icon_svg")
 
 [node name="RightPanel" type="Sprite2D" parent="VisualComponent/SolarPanels"]
-unique_name_in_owner = true
-# Placeholder texture/position
+position = Vector2(15, 0)
+scale = Vector2(0.08, 0.03)
+texture = ExtResource("2_icon_svg")
 
 [node name="CommunicationDish" type="Sprite2D" parent="VisualComponent"]
-unique_name_in_owner = true
-# Placeholder texture/position
+position = Vector2(0, -12)
+scale = Vector2(0.04, 0.04)
+texture = ExtResource("2_icon_svg")
 
 [node name="SensorArray" type="Sprite2D" parent="VisualComponent"]
-unique_name_in_owner = true # This is VisualComponent/SensorArray (Sprite2D)
-# Placeholder texture/position for visual sensor array
+metadata/_edit_lock_ = true
 
 [node name="StatusLights" type="Node2D" parent="VisualComponent"]
-unique_name_in_owner = true
+position = Vector2(0, 10)
 
 [node name="StatusLight1" type="Sprite2D" parent="VisualComponent/StatusLights"]
-# Placeholder texture/position/color
+position = Vector2(-4, 0)
+scale = Vector2(0.015, 0.015)
+texture = ExtResource("2_icon_svg")
 
 [node name="StatusLight2" type="Sprite2D" parent="VisualComponent/StatusLights"]
-# Placeholder texture/position/color
+scale = Vector2(0.015, 0.015)
+texture = ExtResource("2_icon_svg")
 
 [node name="StatusLight3" type="Sprite2D" parent="VisualComponent/StatusLights"]
-# Placeholder texture/position/color
+position = Vector2(4, 0)
+scale = Vector2(0.015, 0.015)
+texture = ExtResource("2_icon_svg")
 
 [node name="ThrusterSystem" type="Node2D" parent="."]
-unique_name_in_owner = true
-# Placeholder for thruster visuals/nodes
+
 [node name="MainThruster" type="GPUParticles2D" parent="ThrusterSystem"]
-unique_name_in_owner = true
+position = Vector2(0, 15)
 
 [node name="RCSThrusterN" type="GPUParticles2D" parent="ThrusterSystem"]
-unique_name_in_owner = true
+position = Vector2(0, -12)
+rotation = 3.14159
 
 [node name="RCSThrusterS" type="GPUParticles2D" parent="ThrusterSystem"]
-unique_name_in_owner = true
+position = Vector2(0, 12)
 
 [node name="RCSThrusterE" type="GPUParticles2D" parent="ThrusterSystem"]
-unique_name_in_owner = true
+position = Vector2(10, 0)
+rotation = -1.5708
 
 [node name="RCSThrusterW" type="GPUParticles2D" parent="ThrusterSystem"]
-unique_name_in_owner = true
+position = Vector2(-10, 0)
+rotation = 1.5708
 
 [node name="SensorArray" type="Area2D" parent="."]
-unique_name_in_owner = true # This is the root SensorArray (Area2D)
-collision_layer = 0 # Sensors typically don't need to be on a layer that others collide with
-collision_mask = 0 # Define what this sensor detects (e.g., resources layer 3, celestial bodies layer 1)
-# Mask will be set in script or by specific sensor logic later. For now, can be 0.
+collision_layer = 0
+collision_mask = 4
 
 [node name="SensorShape" type="CollisionShape2D" parent="SensorArray"]
-unique_name_in_owner = true
-shape = SubResource("CircleShape2D_sensor_shape")
+shape = SubResource("SubResource_SensorShape")
 
 [node name="CommunicationRange" type="Area2D" parent="."]
-unique_name_in_owner = true
 collision_layer = 0
-collision_mask = 0 # Define what this detects (e.g., other probes on layer 2)
+collision_mask = 2
 
 [node name="CommShape" type="CollisionShape2D" parent="CommunicationRange"]
-unique_name_in_owner = true
-shape = SubResource("CircleShape2D_comm_shape")
+shape = SubResource("SubResource_CommShape")
 
 [node name="MovementTrail" type="Line2D" parent="."]
-unique_name_in_owner = true
-width = 1.0
-default_color = Color(1, 1, 1, 0.5) # Example color
+width = 1.5
+default_color = Color(0.6, 0.7, 1, 0.3)
 
 [node name="MiningLaser" type="Line2D" parent="."]
-unique_name_in_owner = true
+visible = false
+points = PackedVector2Array(0, 0, 0, -50)
 width = 2.0
-default_color = Color(1, 0, 0, 1) # Example red laser color
-visible = false # Initially hidden
+default_color = Color(1, 0.2, 0.2, 1)
 
 [node name="AIAgent" type="Node" parent="."]
-unique_name_in_owner = true
-# Placeholder for AI logic script/node
+script = ExtResource("3_aiagent_gd")
 
 [node name="EnergySystem" type="Node" parent="."]
-unique_name_in_owner = true
-# Placeholder for more complex energy management logic
-
-[node name="AudioComponent" type="AudioStreamPlayer2D" parent="."]
-unique_name_in_owner = true
-# Configure stream, volume, etc. as needed

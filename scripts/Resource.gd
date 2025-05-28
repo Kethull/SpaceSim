@@ -43,6 +43,7 @@ var regeneration_rate: float = 0.0
 
 signal resource_depleted(resource: Node)
 signal resource_discovered(resource: Node, discovering_probe: Node)
+signal resource_harvested(resource_node, amount_harvested, harvester_node)
 
 
 func _ready():
@@ -97,23 +98,32 @@ func _ready():
 # func process_harvesting(delta):
     # pass # Temporarily pass
 
-func harvest(amount: float) -> float:
-    var harvested_amount = min(amount, current_amount)
-    current_amount -= harvested_amount
+func harvest(amount: float, harvester: Node = null) -> float:
+    var actual_harvested_amount = min(amount, current_amount)
     
-    var audio_manager = get_node_or_null("/root/AudioManager")
-    if audio_manager and harvested_amount > 0:
-        # Play harvest sound at the resource's location
-        # Consider if this sound should be played by the probe instead, if it's a laser sound.
-        # For now, playing it at the resource as a generic "being harvested" sound.
-        audio_manager.play_sound_at_position("mining_laser", global_position) # Assuming "mining_laser" is a suitable sound
+    if actual_harvested_amount > 0:
+        current_amount -= actual_harvested_amount
         
-    if current_amount <= 0:
-        resource_depleted.emit(self)
-        # Optionally queue_free() or hide if it doesn't regenerate
-    
-    # update_visual_state() # Uncomment if you have this method
-    return harvested_amount
+        # Emit the signal
+        resource_harvested.emit(self, actual_harvested_amount, harvester)
+        
+        # Existing logic (audio playback)
+        var audio_manager = get_node_or_null("/root/AudioManager")
+        if audio_manager: # The original 'and harvested_amount > 0' is covered by the outer 'if actual_harvested_amount > 0'
+            # Play harvest sound at the resource's location
+            # Consider if this sound should be played by the probe instead, if it's a laser sound.
+            # For now, playing it at the resource as a generic "being harvested" sound.
+            audio_manager.play_sound_at_position("mining_laser", global_position) # Assuming "mining_laser" is a suitable sound
+            
+        # Existing logic (depletion check)
+        if current_amount <= 0:
+            resource_depleted.emit(self)
+            # Optionally queue_free() or hide if it doesn't regenerate
+        
+        # update_visual_state() # Uncomment if you have this method
+        # The return is now outside this block
+        
+    return actual_harvested_amount
 
 # func update_visual_state():
     # pass # Temporarily pass

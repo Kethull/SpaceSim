@@ -1,0 +1,3 @@
+[gd_scene load_steps=0 format=3 uid="uid://cbgn00ppdj1em"]
+
+[node name="Effect" type="GPUParticles2D"]
