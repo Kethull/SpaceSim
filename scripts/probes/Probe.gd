@@ -155,7 +155,7 @@ func setup_sensor_systems() -> void:
 			(sensor_shape.shape as CircleShape2D).radius = 150.0 # Default sensor range
 		return
 
-	var sensor_range_val = cfg.get("sensor_range", 150.0)
+	var sensor_range_val = cfg.get("sensor_range")
 	# var sensor_angle_deg = cfg.get("sensor_angle_degrees", 90.0) # Not directly used by CircleShape2D
 
 	if sensor_shape.shape is CircleShape2D:
@@ -177,7 +177,7 @@ func setup_visual_appearance() -> void:
 	
 	var cfg_visual = _config_manager_instance.get_config() if _config_manager_instance else null
 	if cfg_visual:
-		var probe_scale_config = cfg_visual.get("probe_size", Vector2.ONE)
+		var probe_scale_config = cfg_visual.get("probe_size")
 		if probe_scale_config is float or probe_scale_config is int:
 			visual_component.scale = Vector2(probe_scale_config, probe_scale_config)
 		elif probe_scale_config is Vector2:
@@ -287,7 +287,7 @@ func configure_thruster_particles(thruster: GPUParticles2D, direction: Vector2) 
 	if not thruster: return
 	var mat = ParticleProcessMaterial.new()
 	mat.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_POINT
-	mat.direction = direction.normalized(); mat.spread = 15.0
+	mat.direction = Vector3(direction.x, direction.y, 0.0).normalized()
 	mat.initial_velocity_min = 50.0; mat.initial_velocity_max = 100.0
 	mat.gravity = Vector3.ZERO
 	mat.damping_min = 5.0; mat.damping_max = 10.0

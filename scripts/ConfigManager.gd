@@ -43,22 +43,16 @@ func get_config() -> GameConfiguration:
 	return load("res://scripts/GameConfiguration.gd").new()
 
 func get_setting(section_name: String, key_name: String, default_value = null):
-	var config_resource = get_config() # Obtain the configuration resource
-
+	var config_resource = get_config()
 	if not config_resource:
-		printerr("ConfigManager: config_resource is null when trying to get setting '%s'. Returning default value." % key_name)
 		return default_value
-
-	# Using .has(key_name) as per specific instructions.
-	# GameConfiguration properties are expected to be direct members.
-	#if config_resource.find_child(key_name):
-		#var value = config_resource.get(key_name)
-		## If the property exists but its value is legitimately null, we should return that null.
-		## The default_value is for when the property *key* itself is missing.
-		#return value
-	#else:
-		#printerr("ConfigManager: Setting key '%s' not found in GameConfiguration. Returning default value: %s." % [key_name, str(default_value)])
-		#return default_value
+	
+	# Use get() with a null check - if property doesn't exist, get() returns null
+	var value = config_resource.get(key_name)
+	if value != null:
+		return value
+	else:
+		return default_value
 
 func validate_configuration() -> bool:
 	var current_config = get_config()
