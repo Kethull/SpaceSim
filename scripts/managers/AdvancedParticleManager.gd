@@ -1,5 +1,4 @@
 extends Node
-class_name AdvancedParticleManager
 
 # Manages pooling and activation of various particle effects.
 # Should be set up as an AutoLoad singleton named "AdvancedParticleManager".

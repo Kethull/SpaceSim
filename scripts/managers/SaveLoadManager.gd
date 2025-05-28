@@ -1,5 +1,4 @@
 extends Node
-class_name SaveLoadManager
 
 const ProbeDataRes = preload("res://scripts/data/ProbeData.gd")
 const CelestialBodyDataRes = preload("res://scripts/data/CelestialBodyData.gd")

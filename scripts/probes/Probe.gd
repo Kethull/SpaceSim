@@ -305,10 +305,10 @@ func update_action_smoothing(delta: float) -> void:
 	var cfg = _config_manager_instance.get_config() if _config_manager_instance else null
 	var rup_spd = 2.0; var rdown_spd = 3.0; var rot_rup_spd = 2.5; var rot_rdown_spd = 3.5
 	if cfg:
-		rup_spd = cfg.get("thrust_ramp_up_speed", 2.0)
-		rdown_spd = cfg.get("thrust_ramp_down_speed", 3.0)
-		rot_rup_spd = cfg.get("rotation_ramp_up_speed", 2.5)
-		rot_rdown_spd = cfg.get("rotation_ramp_down_speed", 3.5)
+		rup_spd = _config_manager_instance.get_setting("probe", "rup_spd", 2.0)
+		rdown_spd = _config_manager_instance.get_setting("probe", "thrust_ramp_down_speed", 3.0)
+		rot_rup_spd = _config_manager_instance.get_setting("probe", "rotation_ramp_up_speed", 2.5)
+		rot_rdown_spd = _config_manager_instance.get_setting("probe", "rotation_ramp_down_speed", 3.5)
 
 	if is_thrusting and current_thrust_level_idx > 0:
 		thrust_ramp_ratio = min(1.0, thrust_ramp_ratio + rup_spd * delta)
