@@ -1,3 +1,14 @@
-[gd_scene load_steps=0 format=3 uid="uid://cbgn00ppdj1ek"]
+[gd_scene load_steps=3 format=3 uid="uid://bkjxcy345saq3"]
 
-[node name="Effect" type="GPUParticles2D"]
+[ext_resource type="Script" path="res://scripts/effects/ParticleEffect.gd" id="1_abcde"]
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_1"]
+
+[node name="CommunicationPulse" type="Node2D"]
+script = ExtResource("1_abcde")
+
+[node name="GPUParticles2D" type="GPUParticles2D" parent="."]
+amount = 50
+process_material = SubResource("ParticleProcessMaterial_1")
+lifetime = 1.0
+one_shot = false
+emitting = false

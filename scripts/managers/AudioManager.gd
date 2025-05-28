@@ -19,6 +19,7 @@ func _ready():
 	load_audio_settings() # This will set the _linear vars and then update player volumes
 
 func create_audio_pools():
+	return
 	# Sound configurations: file path, pool count, and audio bus name.
 	# Ensure audio bus names ("Master", "SFX", "Ambient") exist in your Godot project's audio bus layout.
 	# If buses are not set up, sounds will play on the "Master" bus by default.

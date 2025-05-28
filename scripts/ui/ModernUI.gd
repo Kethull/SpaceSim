@@ -21,11 +21,11 @@ signal ui_action_requested(action_type: String, data: Dictionary)
 func _ready():
 	# Check if essential UI panels were found after @onready initialization
 	if probe_list_panel == null:
-		push_error("ModernUI Error: ProbeListPanel node not found. Expected path: 'HUD#ProbeListPanel'. Probe list UI will not be functional.")
+		push_error("ModernUI Error: ProbeListPanel node not found. Expected path: 'ProbeListPanel'. Probe list UI will not be functional.")
 	if selected_probe_panel == null:
-		push_error("ModernUI Error: SelectedProbePanel node not found. Expected path: 'HUD#SelectedProbePanel'. Selected probe UI will not be functional.")
+		push_error("ModernUI Error: SelectedProbePanel node not found. Expected path: 'SelectedProbePanel'. Selected probe UI will not be functional.")
 	if system_stats_panel == null:
-		push_error("ModernUI Error: SystemStatsPanel node not found. Expected path: 'HUD#SystemStatsPanel'. System stats UI will not be functional.")
+		push_error("ModernUI Error: SystemStatsPanel node not found. Expected path: 'SystemStatsPanel'. System stats UI will not be functional.")
 	
 	# Handle debug_panel separately as its necessity depends on ConfigManager.config.debug_mode
 	if debug_panel == null:
