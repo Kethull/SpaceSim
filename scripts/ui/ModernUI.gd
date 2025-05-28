@@ -2,7 +2,7 @@ extends Control
 class_name ModernUI
 
 @onready var hud: Control = self # The script is on the HUD node, so 'self' is the HUD.
-@onready var probe_list_panel: Panel = $"HUD#ProbeListPanel"
+@onready var probe_list_panel: Panel = $"ProbeListPanel"
 @onready var selected_probe_panel: Panel = $"HUD#SelectedProbePanel"
 @onready var system_stats_panel: Panel = $"HUD#SystemStatsPanel"
 @onready var debug_panel: Panel = $"HUD#DebugPanel"
@@ -56,7 +56,9 @@ func setup_probe_list_panel():
 		return # Error logged in _ready
 
 	var scroll_container = ScrollContainer.new()
+	scroll_container.name = "ScrollContainer"
 	var vbox = VBoxContainer.new()
+	vbox.name = "VBoxContainer"
 	
 	scroll_container.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	vbox.set_h_size_flags(Control.SIZE_EXPAND_FILL)
